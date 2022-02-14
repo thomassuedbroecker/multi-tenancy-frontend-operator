@@ -28,8 +28,9 @@ type TenancyFrontedSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of TenancyFronted. Edit tenancyfronted_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	//+kubebuilder:validation:Minimum=0
+	// Size is the size of the memcached deployment
+	Size int32 `json:"size"`
 }
 
 // TenancyFrontedStatus defines the observed state of TenancyFronted
