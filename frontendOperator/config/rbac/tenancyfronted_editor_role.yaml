@@ -1,0 +1,24 @@
+# permissions for end users to edit tenancyfronteds.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tenancyfronted-editor-role
+rules:
+- apiGroups:
+  - cache.example.net
+  resources:
+  - tenancyfronteds
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cache.example.net
+  resources:
+  - tenancyfronteds/status
+  verbs:
+  - get
