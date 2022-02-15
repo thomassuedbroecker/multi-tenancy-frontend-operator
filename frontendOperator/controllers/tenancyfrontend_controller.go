@@ -24,6 +24,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	// Add to read error from Kubernetes
+	"k8s.io/apimachinery/pkg/api/errors"
+
 	multitenancyv1alpha1 "github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v1alpha1"
 )
 
@@ -47,11 +50,28 @@ type TenancyFrontendReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.0/pkg/reconcile
 func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	// "Verify if a CRD of TenancyFrontend exists"
+	logger.Info("Verify if a CRD of TenancyFrontend exists")
+	tenancyfrontend := &multitenancyv1alpha1.TenancyFrontend{}
+	err := r.Get(ctx, req.NamespacedName, tenancyfrontend)
 
-	return ctrl.Result{}, nil
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			logger.Info("TenancyFrontend resource not found. Ignoring since object must be deleted")
+			return ctrl.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		logger.Error(err, "Failed to get TenancyFrontend")
+		return ctrl.Result{}, err
+	} else {
+		return ctrl.Result{}, nil
+	}
+
 }
 
 // SetupWithManager sets up the controller with the Manager.
