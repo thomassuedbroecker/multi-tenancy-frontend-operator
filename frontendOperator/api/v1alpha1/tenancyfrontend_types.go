@@ -23,18 +23,17 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// TenancyFrontedSpec defines the desired state of TenancyFronted
-type TenancyFrontedSpec struct {
+// TenancyFrontendSpec defines the desired state of TenancyFrontend
+type TenancyFrontendSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	//+kubebuilder:validation:Minimum=0
-	// Size is the size of the memcached deployment
-	Size int32 `json:"size"`
+	// Foo is an example field of TenancyFrontend. Edit tenancyfrontend_types.go to remove/update
+	Foo string `json:"foo,omitempty"`
 }
 
-// TenancyFrontedStatus defines the observed state of TenancyFronted
-type TenancyFrontedStatus struct {
+// TenancyFrontendStatus defines the observed state of TenancyFrontend
+type TenancyFrontendStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
@@ -42,24 +41,24 @@ type TenancyFrontedStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// TenancyFronted is the Schema for the tenancyfronteds API
-type TenancyFronted struct {
+// TenancyFrontend is the Schema for the tenancyfrontends API
+type TenancyFrontend struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   TenancyFrontedSpec   `json:"spec,omitempty"`
-	Status TenancyFrontedStatus `json:"status,omitempty"`
+	Spec   TenancyFrontendSpec   `json:"spec,omitempty"`
+	Status TenancyFrontendStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// TenancyFrontedList contains a list of TenancyFronted
-type TenancyFrontedList struct {
+// TenancyFrontendList contains a list of TenancyFrontend
+type TenancyFrontendList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []TenancyFronted `json:"items"`
+	Items           []TenancyFrontend `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&TenancyFronted{}, &TenancyFrontedList{})
+	SchemeBuilder.Register(&TenancyFrontend{}, &TenancyFrontendList{})
 }

@@ -12,8 +12,8 @@ resources:
     namespaced: true
   controller: true
   domain: example.net
-  group: cache
-  kind: TenancyFronted
+  group: multitenancy
+  kind: TenancyFrontend
   path: github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v1alpha1
   version: v1alpha1
 version: "3"
