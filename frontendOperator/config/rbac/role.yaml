@@ -1,0 +1,33 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - multitenancy.example.net
+  resources:
+  - tenancyfrontends
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - multitenancy.example.net
+  resources:
+  - tenancyfrontends/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - multitenancy.example.net
+  resources:
+  - tenancyfrontends/status
+  verbs:
+  - get
+  - patch
+  - update
