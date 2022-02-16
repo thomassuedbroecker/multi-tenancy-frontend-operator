@@ -118,9 +118,19 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(m *v1alpha1.Tena
 	mycommand := make([]string, 3)
 	mycommand[0] = "sh"
 	mycommand[1] = "-c"
-	mycommand[3] = "curl -s http://localhost:8080"
+	mycommand[2] = "curl -s http://localhost:8080"
 
-	logger.Info("Creating a new Deployment", "Replicas", replicas)
+	// Using the context to log information
+	logger.Info("Logging: Creating a new Deployment", "Replicas", replicas)
+	message := "Logging: (Name: " + m.Name + ") \n"
+	logger.Info(message)
+	message = "Logging: (Namespace: " + m.Namespace + ") \n"
+	logger.Info(message)
+
+	for key, value := range ls {
+		message = "Logging: (Key: [" + key + "] Value: [" + value + "]) \n"
+		logger.Info(message)
+	}
 
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -142,7 +152,7 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(m *v1alpha1.Tena
 						Name:  "service-frontend",
 						Ports: []corev1.ContainerPort{{
 							ContainerPort: 8080,
-							Name:          "service-frontend",
+							Name:          "nginx-port",
 						}},
 						Env: []corev1.EnvVar{{
 							Name: "VUE_APPID_DISCOVERYENDPOINT",
