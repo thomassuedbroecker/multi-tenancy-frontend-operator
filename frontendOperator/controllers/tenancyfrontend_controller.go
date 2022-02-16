@@ -38,6 +38,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"fmt" // Basic functionalities
 )
 
 // TenancyFrontendReconciler reconciles a TenancyFrontend object
@@ -49,6 +51,8 @@ type TenancyFrontendReconciler struct {
 //+kubebuilder:rbac:groups=multitenancy.example.net,resources=tenancyfrontends,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=multitenancy.example.net,resources=tenancyfrontends/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=multitenancy.example.net,resources=tenancyfrontends/finalizers,verbs=update
+//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -101,6 +105,61 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		logger.Error(err, "Failed to get Deployment")
 		return ctrl.Result{}, err
 	}
+	//*****************************************
+	// Define secret
+	secret := &corev1.Secret{}
+
+	//*****************************************
+	// Create secret appid.client-id-frontend
+	logger.Info("Create secret appid.client-id-frontend")
+
+	targetSecretName := "appid.client-id-frontend"
+	clientId := "b12a05c3-8164-45d9-a1b8-af1dedf8ccc3"
+	targetSecret, err := createSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_CLIENT_ID", clientId)
+	// Error creating replicating the secret - requeue the request.
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.Get(context.TODO(), types.NamespacedName{Name: targetSecret.Name, Namespace: targetSecret.Namespace}, secret)
+	if err != nil && errors.IsNotFound(err) {
+		logger.Info(fmt.Sprintf("Target secret %s doesn't exist, creating it", targetSecretName))
+		err = r.Create(context.TODO(), targetSecret)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	} else {
+		logger.Info(fmt.Sprintf("Target secret %s exists, updating it now", targetSecretName))
+		err = r.Update(context.TODO(), targetSecret)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	//*****************************************
+	// Create secret appid.discovery-endpoint
+	targetSecretName = "appid.discovery-endpoint"
+	discoveryEndpoint := "https://eu-de.appid.cloud.ibm.com/oauth/v4/3793e3f8-ed31-42c9-9294-bc415fc58ab7/.well-known/openid-configuration"
+	targetSecret, err = createSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_DISCOVERYENDPOINT", discoveryEndpoint)
+	// Error creating replicating the secret - requeue the request.
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.Get(context.TODO(), types.NamespacedName{Name: targetSecret.Name, Namespace: targetSecret.Namespace}, secret)
+	if err != nil && errors.IsNotFound(err) {
+		logger.Info(fmt.Sprintf("Target secret %s doesn't exist, creating it", targetSecretName))
+		err = r.Create(context.TODO(), targetSecret)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	} else {
+		logger.Info(fmt.Sprintf("Target secret %s exists, updating it now", targetSecretName))
+		err = r.Update(context.TODO(), targetSecret)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
 
 	logger.Info("Just return nil")
 	return ctrl.Result{}, nil
@@ -116,7 +175,7 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(m *v1alpha1.Tena
 	// for the ReadinessProbe and LivenessProbe
 	// command: ["sh", "-c", "curl -s http://localhost:8080"]
 	mycommand := make([]string, 3)
-	mycommand[0] = "sh"
+	mycommand[0] = "/bin/sh"
 	mycommand[1] = "-c"
 	mycommand[2] = "curl -s http://localhost:8080"
 
@@ -168,7 +227,7 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(m *v1alpha1.Tena
 								ValueFrom: &corev1.EnvVarSource{
 									SecretKeyRef: &corev1.SecretKeySelector{
 										LocalObjectReference: corev1.LocalObjectReference{
-											Name: "appid.client-id-fronted",
+											Name: "appid.client-id-frontend",
 										},
 										Key: "VUE_APPID_CLIENT_ID",
 									},
@@ -178,9 +237,6 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(m *v1alpha1.Tena
 							},
 							{Name: "VUE_APP_API_URL_PRODUCTS",
 								Value: "VUE_APP_API_URL_PRODUCTS_VALUE",
-							},
-							{Name: "VUE_APP_API_URL_ORDERS",
-								Value: "VUE_APP_API_URL_ORDERS_VALUE",
 							},
 							{Name: "VUE_APP_API_URL_ORDERS",
 								Value: "VUE_APP_API_URL_ORDERS_VALUE",
@@ -212,7 +268,7 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(m *v1alpha1.Tena
 		}, // Spec
 	} // Deployment
 
-	// Set Memcached instance as the owner and controller
+	// Set TenancyFrontend instance as the owner and controller
 	ctrl.SetControllerReference(m, dep, r.Scheme)
 	return dep
 }
@@ -228,4 +284,22 @@ func (r *TenancyFrontendReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&multitenancyv1alpha1.TenancyFrontend{}).
 		Complete(r)
+}
+
+// ********************************************************
+// additional functions
+
+// Create Secret definition
+func createSecret(name string, namespace string, key string, value string) (*corev1.Secret, error) {
+	m := make(map[string]string)
+	m[key] = value
+
+	return &corev1.Secret{
+		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		Immutable:  new(bool),
+		Data:       map[string][]byte{},
+		StringData: m,
+		Type:       "Opaque",
+	}, nil
 }
