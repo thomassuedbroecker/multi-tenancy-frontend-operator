@@ -35,6 +35,7 @@ import (
 	// Add to define the own deployment 'yaml' configuration
 	"github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v1alpha1"
 	multitenancyv1alpha1 "github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v1alpha1"
+	"github.com/thomassuedbroecker/multi-tenancy-frontend-operator/helpers"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,6 +50,8 @@ type TenancyFrontendReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
+
+var customLogger bool = true
 
 //+kubebuilder:rbac:groups=multitenancy.example.net,resources=tenancyfrontends,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=multitenancy.example.net,resources=tenancyfrontends/status,verbs=get;update;patch
@@ -111,10 +114,11 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	//*****************************************
 	// Define service NodePort
 	servPort := &corev1.Service{}
+	helpers.CustomLogs("Define service NodePort", ctx, customLogger)
 
 	//*****************************************
 	// Create service NodePort
-	logger.Info("Create service node port")
+	helpers.CustomLogs("Create service NodePort", ctx, customLogger)
 
 	targetServPort, err := createServiceNodePort("service-frontend", tenancyfrontend.Namespace)
 
@@ -144,7 +148,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	//*****************************************
 	// Create service cluster
-	logger.Info("Create service cluster")
+	helpers.CustomLogs("Create service Cluster IP", ctx, customLogger)
 
 	targetServClust, err := createServiceClust("service-frontend-cip", tenancyfrontend.Namespace)
 
@@ -170,11 +174,12 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	//*****************************************
 	// Define secret
+	helpers.CustomLogs("Define secret", ctx, customLogger)
 	secret := &corev1.Secret{}
 
 	//*****************************************
 	// Create secret appid.client-id-frontend
-	logger.Info("Create secret appid.client-id-frontend")
+	helpers.CustomLogs("Create secret appid.client-id-frontend", ctx, customLogger)
 
 	targetSecretName := "appid.client-id-frontend"
 	clientId := "b12a05c3-8164-45d9-a1b8-af1dedf8ccc3"
