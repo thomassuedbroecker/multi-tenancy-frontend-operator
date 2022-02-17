@@ -184,7 +184,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	targetSecretName := "appid.client-id-frontend"
 	clientId := "b12a05c3-8164-45d9-a1b8-af1dedf8ccc3"
-	targetSecret, err := createSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_CLIENT_ID", clientId)
+	targetSecret, err := defineSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_CLIENT_ID", clientId)
 	// Error creating replicating the secret - requeue the request.
 	if err != nil {
 		return ctrl.Result{}, err
@@ -200,7 +200,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	// Create secret appid.discovery-endpoint
 	targetSecretName = "appid.discovery-endpoint"
 	discoveryEndpoint := "https://eu-de.appid.cloud.ibm.com/oauth/v4/3793e3f8-ed31-42c9-9294-bc415fc58ab7/.well-known/openid-configuration"
-	targetSecret, err = createSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_DISCOVERYENDPOINT", discoveryEndpoint)
+	targetSecret, err = defineSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_DISCOVERYENDPOINT", discoveryEndpoint)
 	// Error creating replicating the secret - requeue the request.
 	if err != nil {
 		return ctrl.Result{}, err
@@ -341,7 +341,7 @@ func (r *TenancyFrontendReconciler) SetupWithManager(mgr ctrl.Manager) error {
 // additional functions
 
 // Create Secret definition
-func createSecret(name string, namespace string, key string, value string) (*corev1.Secret, error) {
+func defineSecret(name string, namespace string, key string, value string) (*corev1.Secret, error) {
 	m := make(map[string]string)
 	m[key] = value
 
