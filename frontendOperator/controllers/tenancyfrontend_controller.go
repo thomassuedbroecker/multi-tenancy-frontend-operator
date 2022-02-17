@@ -40,6 +40,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"fmt" // Basic functionalities
+
+	"k8s.io/apimachinery/pkg/util/intstr" // Because of the cluster service target port definition
 )
 
 // TenancyFrontendReconciler reconciles a TenancyFrontend object
@@ -105,6 +107,67 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		logger.Error(err, "Failed to get Deployment")
 		return ctrl.Result{}, err
 	}
+
+	//*****************************************
+	// Define service NodePort
+	servPort := &corev1.Service{}
+
+	//*****************************************
+	// Create service NodePort
+	logger.Info("Create service node port")
+
+	targetServPort, err := createServiceNodePort("service-frontend", tenancyfrontend.Namespace)
+
+	// Error creating replicating the secret - requeue the request.
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.Get(context.TODO(), types.NamespacedName{Name: targetServPort.Name, Namespace: targetServPort.Namespace}, servPort)
+	if err != nil && errors.IsNotFound(err) {
+		logger.Info(fmt.Sprintf("Target service port %s doesn't exist, creating it", targetServPort.Name))
+		err = r.Create(context.TODO(), targetServPort)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	} else {
+		logger.Info(fmt.Sprintf("Target service port %s exists, updating it now", targetServPort))
+		err = r.Update(context.TODO(), targetServPort)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	//*****************************************
+	// Define cluster
+	servClust := &corev1.Service{}
+
+	//*****************************************
+	// Create service cluster
+	logger.Info("Create service cluster")
+
+	targetServClust, err := createServiceClust("service-frontend-cip", tenancyfrontend.Namespace)
+
+	// Error creating replicating the service cluster - requeue the request.
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	err = r.Get(context.TODO(), types.NamespacedName{Name: targetServClust.Name, Namespace: targetServClust.Namespace}, servClust)
+	if err != nil && errors.IsNotFound(err) {
+		logger.Info(fmt.Sprintf("Target service cluster %s doesn't exist, creating it", targetServClust.Name))
+		err = r.Create(context.TODO(), targetServClust)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	} else {
+		logger.Info(fmt.Sprintf("Target service cluster %s exists, updating it now", targetServClust))
+		err = r.Update(context.TODO(), targetServClust)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	//*****************************************
 	// Define secret
 	secret := &corev1.Secret{}
@@ -301,5 +364,54 @@ func createSecret(name string, namespace string, key string, value string) (*cor
 		Data:       map[string][]byte{},
 		StringData: m,
 		Type:       "Opaque",
+	}, nil
+}
+
+// Create Service NodePort
+func createServiceNodePort(name string, namespace string) (*corev1.Service, error) {
+	// Define map for the selector
+	mselector := make(map[string]string)
+	key := "app"
+	value := "service-frontend"
+	mselector[key] = value
+
+	var port int32 = 8080
+
+	return &corev1.Service{
+		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Service"},
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeNodePort,
+			Ports: []corev1.ServicePort{{
+				Port: port,
+				Name: "http",
+			}},
+			Selector: mselector,
+		},
+	}, nil
+}
+
+// Create Service Cluster
+func createServiceClust(name string, namespace string) (*corev1.Service, error) {
+
+	mselector := make(map[string]string)
+	key := "app"
+	value := "service-frontend-cip"
+	mselector[key] = value
+
+	var port int32 = 80
+	var targetPort int32 = 8080
+
+	return &corev1.Service{
+		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Service"},
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+			Ports: []corev1.ServicePort{{
+				Port:       port,
+				TargetPort: intstr.IntOrString{IntVal: targetPort},
+			}},
+			Selector: mselector,
+		},
 	}, nil
 }
