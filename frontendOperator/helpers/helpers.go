@@ -8,5 +8,7 @@ import (
 
 func CustomLogs(message string, ctx context.Context, enabled bool) {
 	customLogs := log.FromContext(ctx)
-	customLogs.Info("Info:[ " + message + " ]\n")
+	if enabled {
+		customLogs.Info("Info:[ " + message + " ]\n")
+	}
 }

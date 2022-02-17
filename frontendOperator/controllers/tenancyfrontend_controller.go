@@ -158,6 +158,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 
 	err = r.Get(context.TODO(), types.NamespacedName{Name: targetServClust.Name, Namespace: targetServClust.Namespace}, servClust)
+
 	if err != nil && errors.IsNotFound(err) {
 		logger.Info(fmt.Sprintf("Target service cluster %s doesn't exist, creating it", targetServClust.Name))
 		err = r.Create(context.TODO(), targetServClust)
@@ -190,18 +191,9 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 
 	err = r.Get(context.TODO(), types.NamespacedName{Name: targetSecret.Name, Namespace: targetSecret.Namespace}, secret)
-	if err != nil && errors.IsNotFound(err) {
-		logger.Info(fmt.Sprintf("Target secret %s doesn't exist, creating it", targetSecretName))
-		err = r.Create(context.TODO(), targetSecret)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-	} else {
-		logger.Info(fmt.Sprintf("Target secret %s exists, updating it now", targetSecretName))
-		err = r.Update(context.TODO(), targetSecret)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
+	secretErr := verifySecrectStatus(ctx, r, targetSecretName, targetSecret, err)
+	if secretErr != nil && errors.IsNotFound(secretErr) {
+		return ctrl.Result{}, secretErr
 	}
 
 	//*****************************************
@@ -215,18 +207,9 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	}
 
 	err = r.Get(context.TODO(), types.NamespacedName{Name: targetSecret.Name, Namespace: targetSecret.Namespace}, secret)
-	if err != nil && errors.IsNotFound(err) {
-		logger.Info(fmt.Sprintf("Target secret %s doesn't exist, creating it", targetSecretName))
-		err = r.Create(context.TODO(), targetSecret)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-	} else {
-		logger.Info(fmt.Sprintf("Target secret %s exists, updating it now", targetSecretName))
-		err = r.Update(context.TODO(), targetSecret)
-		if err != nil {
-			return ctrl.Result{}, err
-		}
+	secretErr = verifySecrectStatus(ctx, r, targetSecretName, targetSecret, err)
+	if secretErr != nil && errors.IsNotFound(secretErr) {
+		return ctrl.Result{}, secretErr
 	}
 
 	logger.Info("Just return nil")
@@ -372,7 +355,7 @@ func createSecret(name string, namespace string, key string, value string) (*cor
 	}, nil
 }
 
-// Create Service NodePort
+// Create Service NodePort definition
 func createServiceNodePort(name string, namespace string) (*corev1.Service, error) {
 	// Define map for the selector
 	mselector := make(map[string]string)
@@ -396,7 +379,7 @@ func createServiceNodePort(name string, namespace string) (*corev1.Service, erro
 	}, nil
 }
 
-// Create Service Cluster
+// Create Service ClusterIP definition
 func createServiceClust(name string, namespace string) (*corev1.Service, error) {
 
 	mselector := make(map[string]string)
@@ -419,4 +402,25 @@ func createServiceClust(name string, namespace string) (*corev1.Service, error) 
 			Selector: mselector,
 		},
 	}, nil
+}
+
+// Do all the tests for the status
+func verifySecrectStatus(ctx context.Context, r *TenancyFrontendReconciler, targetSecretName string, targetSecret *v1.Secret, err error) error {
+	logger := log.FromContext(ctx)
+
+	if err != nil && errors.IsNotFound(err) {
+		logger.Info(fmt.Sprintf("Target secret %s doesn't exist, creating it", targetSecretName))
+		err = r.Create(context.TODO(), targetSecret)
+		if err != nil {
+			return err
+		}
+	} else {
+		logger.Info(fmt.Sprintf("Target secret %s exists, updating it now", targetSecretName))
+		err = r.Update(context.TODO(), targetSecret)
+		if err != nil {
+			return err
+		}
+	}
+
+	return err
 }
