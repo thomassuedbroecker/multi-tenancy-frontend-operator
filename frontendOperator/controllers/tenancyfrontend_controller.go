@@ -120,7 +120,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	// Create service NodePort
 	helpers.CustomLogs("Create service NodePort", ctx, customLogger)
 
-	targetServPort, err := createServiceNodePort("service-frontend", tenancyfrontend.Namespace)
+	targetServPort, err := defineServiceNodePort("service-frontend", tenancyfrontend.Namespace)
 
 	// Error creating replicating the secret - requeue the request.
 	if err != nil {
@@ -150,7 +150,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	// Create service cluster
 	helpers.CustomLogs("Create service Cluster IP", ctx, customLogger)
 
-	targetServClust, err := createServiceClust("service-frontend-cip", tenancyfrontend.Namespace)
+	targetServClust, err := defineServiceClust("service-frontend-cip", tenancyfrontend.Namespace)
 
 	// Error creating replicating the service cluster - requeue the request.
 	if err != nil {
@@ -356,7 +356,7 @@ func defineSecret(name string, namespace string, key string, value string) (*cor
 }
 
 // Create Service NodePort definition
-func createServiceNodePort(name string, namespace string) (*corev1.Service, error) {
+func defineServiceNodePort(name string, namespace string) (*corev1.Service, error) {
 	// Define map for the selector
 	mselector := make(map[string]string)
 	key := "app"
@@ -380,7 +380,7 @@ func createServiceNodePort(name string, namespace string) (*corev1.Service, erro
 }
 
 // Create Service ClusterIP definition
-func createServiceClust(name string, namespace string) (*corev1.Service, error) {
+func defineServiceClust(name string, namespace string) (*corev1.Service, error) {
 
 	mselector := make(map[string]string)
 	key := "app"
