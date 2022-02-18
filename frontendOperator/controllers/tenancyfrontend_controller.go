@@ -217,10 +217,10 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 }
 
 // deploymentForTenancyFronted returns a tenancyfrontend Deployment object
-func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(m *v1alpha1.TenancyFrontend, ctx context.Context) *appsv1.Deployment {
+func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(frontend *v1alpha1.TenancyFrontend, ctx context.Context) *appsv1.Deployment {
 	logger := log.FromContext(ctx)
-	ls := labelsForTenancyFrontend(m.Name)
-	replicas := m.Spec.Size
+	ls := labelsForTenancyFrontend(frontend.Name)
+	replicas := frontend.Spec.Size
 
 	// Just reflect the command in the deployment.yaml
 	// for the ReadinessProbe and LivenessProbe
@@ -232,9 +232,9 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(m *v1alpha1.Tena
 
 	// Using the context to log information
 	logger.Info("Logging: Creating a new Deployment", "Replicas", replicas)
-	message := "Logging: (Name: " + m.Name + ") \n"
+	message := "Logging: (Name: " + frontend.Name + ") \n"
 	logger.Info(message)
-	message = "Logging: (Namespace: " + m.Namespace + ") \n"
+	message = "Logging: (Namespace: " + frontend.Namespace + ") \n"
 	logger.Info(message)
 
 	for key, value := range ls {
@@ -244,8 +244,8 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(m *v1alpha1.Tena
 
 	dep := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      m.Name,
-			Namespace: m.Namespace,
+			Name:      frontend.Name,
+			Namespace: frontend.Namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: &replicas,
@@ -296,7 +296,7 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(m *v1alpha1.Tena
 								Value: "VUE_APP_CATEGORY_NAME_VALUE",
 							},
 							{Name: "VUE_APP_HEADLINE",
-								Value: "VUE_APP_HEADLINE_VALUE",
+								Value: frontend.Spec.DisplayName,
 							},
 							{Name: "VUE_APP_ROOT",
 								Value: "/",
@@ -320,7 +320,7 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(m *v1alpha1.Tena
 	} // Deployment
 
 	// Set TenancyFrontend instance as the owner and controller
-	ctrl.SetControllerReference(m, dep, r.Scheme)
+	ctrl.SetControllerReference(frontend, dep, r.Scheme)
 	return dep
 }
 

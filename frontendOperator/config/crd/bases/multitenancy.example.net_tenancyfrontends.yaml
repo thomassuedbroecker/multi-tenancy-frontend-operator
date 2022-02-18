@@ -35,8 +35,10 @@ spec:
           spec:
             description: TenancyFrontendSpec defines the desired state of TenancyFrontend
             properties:
+              displayname:
+                type: string
               size:
-                description: Foo is an example field of TenancyFrontend. Edit tenancyfrontend_types.go
+                description: Size is an example field of TenancyFrontend. Edit tenancyfrontend_types.go
                   to remove/update
                 format: int32
                 type: integer

@@ -29,7 +29,8 @@ type TenancyFrontendSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Size is an example field of TenancyFrontend. Edit tenancyfrontend_types.go to remove/update
-	Size int32 `json:"size"`
+	Size        int32  `json:"size"`
+	DisplayName string `json:"displayname,omitempty"`
 }
 
 // TenancyFrontendStatus defines the observed state of TenancyFrontend
