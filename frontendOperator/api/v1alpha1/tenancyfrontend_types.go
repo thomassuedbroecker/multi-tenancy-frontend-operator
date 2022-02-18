@@ -28,7 +28,7 @@ type TenancyFrontendSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of TenancyFrontend. Edit tenancyfrontend_types.go to remove/update
+	// Size is an example field of TenancyFrontend. Edit tenancyfrontend_types.go to remove/update
 	Size int32 `json:"size"`
 }
 
