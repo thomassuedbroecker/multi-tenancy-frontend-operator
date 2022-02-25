@@ -120,7 +120,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	// Create service NodePort
 	helpers.CustomLogs("Create service NodePort", ctx, customLogger)
 
-	targetServPort, err := defineServiceNodePort("service-frontend", tenancyfrontend.Namespace)
+	targetServPort, err := defineServiceNodePort(tenancyfrontend.Name, tenancyfrontend.Namespace)
 
 	// Error creating replicating the secret - requeue the request.
 	if err != nil {
@@ -150,7 +150,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	// Create service cluster
 	helpers.CustomLogs("Create service Cluster IP", ctx, customLogger)
 
-	targetServClust, err := defineServiceClust("service-frontend-cip", tenancyfrontend.Namespace)
+	targetServClust, err := defineServiceClust(tenancyfrontend.Name, tenancyfrontend.Namespace)
 
 	// Error creating replicating the service cluster - requeue the request.
 	if err != nil {
@@ -219,7 +219,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 // deploymentForTenancyFronted returns a tenancyfrontend Deployment object
 func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(frontend *v1alpha1.TenancyFrontend, ctx context.Context) *appsv1.Deployment {
 	logger := log.FromContext(ctx)
-	ls := labelsForTenancyFrontend(frontend.Name)
+	ls := labelsForTenancyFrontend(frontend.Name, frontend.Name)
 	replicas := frontend.Spec.Size
 
 	// Just reflect the command in the deployment.yaml
@@ -326,8 +326,8 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(frontend *v1alph
 
 // labelsForTenancyFrontend returns the labels for selecting the resources
 // belonging to the given tenancyfrontend CR name.
-func labelsForTenancyFrontend(name string) map[string]string {
-	return map[string]string{"app": "labelsForTenancyFrontend", "tenancyfrontend_cr": name}
+func labelsForTenancyFrontend(name_app string, name_cr string) map[string]string {
+	return map[string]string{"app": name_app, "tenancyfrontend_cr": name_cr}
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -360,7 +360,7 @@ func defineServiceNodePort(name string, namespace string) (*corev1.Service, erro
 	// Define map for the selector
 	mselector := make(map[string]string)
 	key := "app"
-	value := "service-frontend"
+	value := name
 	mselector[key] = value
 
 	// Define map for the labels
@@ -390,7 +390,7 @@ func defineServiceClust(name string, namespace string) (*corev1.Service, error) 
 	// Define map for the selector
 	mselector := make(map[string]string)
 	key := "app"
-	value := "service-frontend-cip"
+	value := name
 	mselector[key] = value
 
 	// Define map for the labels
@@ -401,10 +401,11 @@ func defineServiceClust(name string, namespace string) (*corev1.Service, error) 
 
 	var port int32 = 80
 	var targetPort int32 = 8080
+	var clustserv = name + "clusterip"
 
 	return &corev1.Service{
 		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Service"},
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace, Labels: mlabel},
+		ObjectMeta: metav1.ObjectMeta{Name: clustserv, Namespace: namespace, Labels: mlabel},
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 			Ports: []corev1.ServicePort{{

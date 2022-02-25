@@ -1,7 +1,7 @@
 apiVersion: multitenancy.example.net/v1alpha1
 kind: TenancyFrontend
 metadata:
-  name: tenancyfrontend-sample
+  name: tenancyfrontendsample
 spec:
   # TODO(user): Add fields here
   size: 1
