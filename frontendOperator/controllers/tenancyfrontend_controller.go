@@ -363,11 +363,17 @@ func defineServiceNodePort(name string, namespace string) (*corev1.Service, erro
 	value := "service-frontend"
 	mselector[key] = value
 
+	// Define map for the labels
+	mlabel := make(map[string]string)
+	key = "app"
+	value = "service-frontend"
+	mlabel[key] = value
+
 	var port int32 = 8080
 
 	return &corev1.Service{
 		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Service"},
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace, Labels: mlabel},
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeNodePort,
 			Ports: []corev1.ServicePort{{
@@ -381,18 +387,24 @@ func defineServiceNodePort(name string, namespace string) (*corev1.Service, erro
 
 // Create Service ClusterIP definition
 func defineServiceClust(name string, namespace string) (*corev1.Service, error) {
-
+	// Define map for the selector
 	mselector := make(map[string]string)
 	key := "app"
 	value := "service-frontend-cip"
 	mselector[key] = value
+
+	// Define map for the labels
+	mlabel := make(map[string]string)
+	key = "app"
+	value = "service-frontend"
+	mlabel[key] = value
 
 	var port int32 = 80
 	var targetPort int32 = 8080
 
 	return &corev1.Service{
 		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Service"},
-		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
+		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace, Labels: mlabel},
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 			Ports: []corev1.ServicePort{{
