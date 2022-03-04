@@ -178,6 +178,9 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	helpers.CustomLogs("Define secret", ctx, customLogger)
 	secret := &corev1.Secret{}
 
+	createUpdateSecrect()
+	deleteSecrect()
+
 	//*****************************************
 	// Create secret appid.client-id-frontend
 	helpers.CustomLogs("Create secret appid.client-id-frontend", ctx, customLogger)
@@ -442,4 +445,34 @@ func verifySecrectStatus(ctx context.Context, r *TenancyFrontendReconciler, targ
 	}
 
 	return err
+}
+
+// How to handle secrets and configmap for multiple deployments?
+
+// 1. What is needed to map a secret to a deployment?
+//    -> using a label with the deploymentname in the secret metadata
+//
+// 2. How does a application instance know which secret must be used for the it't own deployment?
+//
+//    -> Include the name of the deployment to the secret name?
+//       -> But, how to refect this for the variables for the used application container
+//          -> Maybe only one application instance is permitted within one namespace?
+
+func createUpdateSecrect() error {
+
+	// 1. verify if the deployment exists
+	// 2. verify if a secrect for the deployment exists
+	// 3. if no secret exists prepare a secret for the deployment and create a secret
+	// 4. if a secret exists update the secret
+
+	return nil
+}
+
+func deleteSecrect() error {
+
+	// 1. get the secret
+	// 2. verify is a deployment for that secret exists
+	// 3. if no deployment for the secret exists delete the deployment
+
+	return nil
 }
