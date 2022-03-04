@@ -447,12 +447,12 @@ func verifySecrectStatus(ctx context.Context, r *TenancyFrontendReconciler, targ
 	return err
 }
 
-// How to handle secrets and configmap for multiple deployments?
+// How to handle secrets and configmap for multible deployments?
 
 // 1. What is needed to map a secret to a deployment?
-//    -> using a label with the deploymentname in the secret metadata
+//    -> Using a label with the deploymentname in the secret metadata?
 //
-// 2. How does a application instance know which secret must be used for the it't own deployment?
+// 2. How does a application instance know which secret must be used for it's own deployment?
 //
 //    -> Include the name of the deployment to the secret name?
 //       -> But, how to refect this for the variables for the used application container
