@@ -78,7 +78,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	tenancyfrontend := &multitenancyv1alpha1.TenancyFrontend{}
 
 	// Get objects inside the Kubernetes namespace
-	namespace := "default"
+	namespace := tenancyfrontend.Namespace
 	kind := "TenancyFrontend"
 	config := ctrl.GetConfigOrDie()
 	clientset := kubernetes.NewForConfigOrDie(config)
@@ -119,6 +119,36 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			if verifysecret != nil {
 
 				errsec = r.Delete(context.TODO(), verifysecret, &client.DeleteOptions{})
+				if errsec != nil {
+					return ctrl.Result{}, errsec
+				}
+			}
+
+			// delete services
+			verifyservice, errsec := VerifyServiceTenancyFrontend(clientset, ctx, namespace)
+			if errsec != nil {
+				return ctrl.Result{}, errsec
+			}
+
+			helpers.CustomLogs("Try to delete service", ctx, customLogger)
+			if verifyservice != nil {
+
+				errsec = r.Delete(context.TODO(), verifyservice, &client.DeleteOptions{})
+				if errsec != nil {
+					return ctrl.Result{}, errsec
+				}
+			}
+
+			// delete services
+			verifyservice, errsec = VerifyServiceTenancyFrontend(clientset, ctx, namespace)
+			if errsec != nil {
+				return ctrl.Result{}, errsec
+			}
+
+			helpers.CustomLogs("Try to delete service", ctx, customLogger)
+			if verifyservice != nil {
+
+				errsec = r.Delete(context.TODO(), verifyservice, &client.DeleteOptions{})
 				if errsec != nil {
 					return ctrl.Result{}, errsec
 				}
@@ -431,7 +461,7 @@ func defineSecret(name string, namespace string, key string, value string, deplo
 	key = "deployment"
 	value = deploymentname
 	mlabel[key] = value
-	key = "tencanyfrontend"
+	key = "tenancyfrontend"
 	value = "yes"
 	mlabel[key] = value
 
@@ -575,9 +605,9 @@ func VerifySecretTenancyFrontend(clientset *kubernetes.Clientset, ctx context.Co
 	} else {
 		for _, item := range secret_items {
 			mlabel := item.Labels
-			info := "Label app: [" + mlabel["tencanyfrontend"] + "] Name: [" + item.Name + "]"
+			info := "Label app: [" + mlabel["tenancyfrontend"] + "] Name: [" + item.Name + "]"
 			helpers.CustomLogs(info, ctx, customLogger)
-			if (secretname == item.Name) && (mlabel["tencanyfrontend"] == "yes") {
+			if (secretname == item.Name) && (mlabel["tenancyfrontend"] == "yes") {
 				return &item, err
 			}
 		}
@@ -636,4 +666,29 @@ func VerifyDeploymentExists(clientset *kubernetes.Clientset, ctx context.Context
 		}
 	}
 	return false, nil
+}
+
+// Verify if a service for the TenancyFrontend exists
+
+func VerifyServiceTenancyFrontend(clientset *kubernetes.Clientset, ctx context.Context,
+	namespace string) (*v1.Service, error) {
+
+	list, err := clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
+	services_items := list.Items
+
+	if err != nil {
+		helpers.CustomLogs(err.Error(), ctx, customLogger)
+		return nil, err
+	} else {
+		for _, item := range services_items {
+			mlabel := item.Labels
+			info := "Label app: [" + mlabel["app"] + "] Name: [" + item.Name + "]"
+			helpers.CustomLogs(info, ctx, customLogger)
+			if mlabel["app"] == "service-frontend" {
+				return &item, err
+			}
+		}
+	}
+
+	return nil, err
 }
