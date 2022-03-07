@@ -43,6 +43,9 @@ import (
 	"fmt" // Basic functionalities
 
 	"k8s.io/apimachinery/pkg/util/intstr" // Because of the cluster service target port definition
+
+	// Get deployments
+	"k8s.io/client-go/kubernetes"
 )
 
 // TenancyFrontendReconciler reconciles a TenancyFrontend object
@@ -89,6 +92,33 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
+	// Get all objects inside the Kubernetes namespace
+	namespace := "default"
+	config := ctrl.GetConfigOrDie()
+	clientset := kubernetes.NewForConfigOrDie(config)
+
+	deployment_items, err := GetDeployments(clientset, ctx, namespace)
+	if err != nil {
+		helpers.CustomLogs(err.Error(), ctx, customLogger)
+	} else {
+		for _, item := range deployment_items {
+			mlabel := item.Labels
+			info := "Label app: [" + mlabel["app"] + "] Name: [" + item.Name + "]"
+			helpers.CustomLogs(info, ctx, customLogger)
+		}
+	}
+
+	secret_items, err := GetSecrets(clientset, ctx, namespace)
+	if err != nil {
+		helpers.CustomLogs(err.Error(), ctx, customLogger)
+	} else {
+		for _, item := range secret_items {
+			mlabel := item.Labels
+			info := "Label app: [" + mlabel["app"] + "] Name: [" + item.Name + "]"
+			helpers.CustomLogs(info, ctx, customLogger)
+		}
+	}
+
 	// Check if the deployment already exists, if not create a new one
 	logger.Info("Verify if the deployment already exists, if not create a new one")
 
@@ -96,6 +126,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	err = r.Get(ctx, types.NamespacedName{Name: tenancyfrontend.Name, Namespace: tenancyfrontend.Namespace}, found)
 
 	if err != nil && errors.IsNotFound(err) {
+
 		// Define a new deployment
 		dep := r.deploymentForTenancyFronted(tenancyfrontend, ctx)
 		logger.Info("Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
@@ -104,11 +135,15 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 			logger.Error(err, "Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
 			return ctrl.Result{}, err
 		}
+
 		// Deployment created successfully - return and requeue
 		return ctrl.Result{Requeue: true}, nil
+
 	} else if err != nil {
+
 		logger.Error(err, "Failed to get Deployment")
 		return ctrl.Result{}, err
+
 	}
 
 	//*****************************************
@@ -458,6 +493,15 @@ func verifySecrectStatus(ctx context.Context, r *TenancyFrontendReconciler, targ
 //       -> But, how to refect this for the variables for the used application container
 //          -> Maybe only one application instance is permitted within one namespace?
 
+// Restrictions:
+// - Only one deployment per namespace
+
+func verifyDeploymentExistsNamespace() error {
+
+	return nil
+
+}
+
 func createUpdateSecrect() error {
 
 	// 1. verify if the deployment exists
@@ -471,8 +515,34 @@ func createUpdateSecrect() error {
 func deleteSecrect() error {
 
 	// 1. get the secret
-	// 2. verify is a deployment for that secret exists
-	// 3. if no deployment for the secret exists delete the deployment
+	// 2. verify does a deployment for that secret exists
+	// 3. if no deployment for the secret exists delete the secret
 
 	return nil
+}
+
+// Get all secrets
+
+func GetSecrets(clientset *kubernetes.Clientset, ctx context.Context,
+	namespace string) ([]v1.Secret, error) {
+
+	list, err := clientset.CoreV1().Secrets(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return list.Items, nil
+}
+
+// Get all deployments
+
+func GetDeployments(clientset *kubernetes.Clientset, ctx context.Context,
+	namespace string) ([]appsv1.Deployment, error) {
+
+	list, err := clientset.AppsV1().Deployments(namespace).
+		List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return list.Items, nil
 }
