@@ -74,180 +74,223 @@ var customLogger bool = true
 func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	// "Verify if a CRD of TenancyFrontend exists"
 	logger.Info("Verify if a CRD of TenancyFrontend exists")
 	tenancyfrontend := &multitenancyv1alpha1.TenancyFrontend{}
-	err := r.Get(ctx, req.NamespacedName, tenancyfrontend)
 
+	// Get objects inside the Kubernetes namespace
+	namespace := "default"
+	kind := "TenancyFrontend"
+	config := ctrl.GetConfigOrDie()
+	clientset := kubernetes.NewForConfigOrDie(config)
+
+	// "Verify if a CR of TenancyFrontend exists"
+	err := r.Get(ctx, req.NamespacedName, tenancyfrontend)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			logger.Info("TenancyFrontend resource not found. Ignoring since object must be deleted")
+
+			helpers.CustomLogs(err.Error(), ctx, customLogger)
+			// delete secret "appid.client-id-frontend"
+			targetSecretName := "appid.client-id-frontend"
+			verifysecret, errsec := VerifySecretTenancyFrontend(clientset, ctx, namespace, targetSecretName)
+			if errsec != nil {
+				return ctrl.Result{}, errsec
+			}
+
+			helpers.CustomLogs("Try to delete secret", ctx, customLogger)
+			if verifysecret != nil {
+				errsec = r.Delete(context.TODO(), verifysecret, &client.DeleteOptions{})
+				if errsec != nil {
+					return ctrl.Result{}, errsec
+				}
+			}
+
+			// delete secret "appid.discovery-endpoint"
+			targetSecretName = "appid.discovery-endpoint"
+			verifysecret, errsec = VerifySecretTenancyFrontend(clientset, ctx, namespace, targetSecretName)
+			if errsec != nil {
+				return ctrl.Result{}, errsec
+			}
+
+			helpers.CustomLogs("Try to delete secret", ctx, customLogger)
+			if verifysecret != nil {
+
+				errsec = r.Delete(context.TODO(), verifysecret, &client.DeleteOptions{})
+				if errsec != nil {
+					return ctrl.Result{}, errsec
+				}
+			}
+
 			return ctrl.Result{}, nil
 		}
+
 		// Error reading the object - requeue the request.
 		logger.Error(err, "Failed to get TenancyFrontend")
 		return ctrl.Result{}, err
 	}
 
-	// Get all objects inside the Kubernetes namespace
-	namespace := "default"
-	config := ctrl.GetConfigOrDie()
-	clientset := kubernetes.NewForConfigOrDie(config)
+	// "Verify if TenancyFrontend deployment exists"
+	deployment_exists, err := VerifyDeploymentExists(clientset, ctx, namespace, kind)
 
-	deployment_items, err := GetDeployments(clientset, ctx, namespace)
 	if err != nil {
-		helpers.CustomLogs(err.Error(), ctx, customLogger)
-	} else {
-		for _, item := range deployment_items {
-			mlabel := item.Labels
-			info := "Label app: [" + mlabel["app"] + "] Name: [" + item.Name + "]"
-			helpers.CustomLogs(info, ctx, customLogger)
-		}
+		return ctrl.Result{}, nil
 	}
 
-	secret_items, err := GetSecrets(clientset, ctx, namespace)
-	if err != nil {
-		helpers.CustomLogs(err.Error(), ctx, customLogger)
-	} else {
-		for _, item := range secret_items {
-			mlabel := item.Labels
-			info := "Label app: [" + mlabel["app"] + "] Name: [" + item.Name + "]"
-			helpers.CustomLogs(info, ctx, customLogger)
-		}
-	}
+	if !deployment_exists {
+		// Check if the deployment already exists, if not create a new one
+		logger.Info("Verify if the deployment already exists, if not create a new one")
 
-	// Check if the deployment already exists, if not create a new one
-	logger.Info("Verify if the deployment already exists, if not create a new one")
+		found := &appsv1.Deployment{}
+		err = r.Get(ctx, types.NamespacedName{Name: tenancyfrontend.Name, Namespace: tenancyfrontend.Namespace}, found)
 
-	found := &appsv1.Deployment{}
-	err = r.Get(ctx, types.NamespacedName{Name: tenancyfrontend.Name, Namespace: tenancyfrontend.Namespace}, found)
+		if err != nil && errors.IsNotFound(err) {
 
-	if err != nil && errors.IsNotFound(err) {
+			// Define a new deployment
+			dep := r.deploymentForTenancyFronted(tenancyfrontend, ctx)
+			logger.Info("Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+			err = r.Create(ctx, dep)
+			if err != nil {
+				logger.Error(err, "Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+				return ctrl.Result{}, err
+			}
 
-		// Define a new deployment
-		dep := r.deploymentForTenancyFronted(tenancyfrontend, ctx)
-		logger.Info("Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
-		err = r.Create(ctx, dep)
-		if err != nil {
-			logger.Error(err, "Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+			// Deployment created successfully - return and requeue
+			return ctrl.Result{Requeue: true}, nil
+
+		} else if err != nil {
+
+			logger.Error(err, "Failed to get Deployment")
 			return ctrl.Result{}, err
+
 		}
-
-		// Deployment created successfully - return and requeue
-		return ctrl.Result{Requeue: true}, nil
-
-	} else if err != nil {
-
-		logger.Error(err, "Failed to get Deployment")
-		return ctrl.Result{}, err
-
 	}
 
-	//*****************************************
-	// Define service NodePort
-	servPort := &corev1.Service{}
-	helpers.CustomLogs("Define service NodePort", ctx, customLogger)
+	if deployment_exists {
+		//*****************************************
+		// Define service NodePort
+		servPort := &corev1.Service{}
+		helpers.CustomLogs("Define service NodePort", ctx, customLogger)
 
-	//*****************************************
-	// Create service NodePort
-	helpers.CustomLogs("Create service NodePort", ctx, customLogger)
+		//*****************************************
+		// Create service NodePort
+		helpers.CustomLogs("Create service NodePort", ctx, customLogger)
 
-	targetServPort, err := defineServiceNodePort(tenancyfrontend.Name, tenancyfrontend.Namespace)
+		targetServPort, err := defineServiceNodePort(tenancyfrontend.Name, tenancyfrontend.Namespace)
 
-	// Error creating replicating the secret - requeue the request.
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	err = r.Get(context.TODO(), types.NamespacedName{Name: targetServPort.Name, Namespace: targetServPort.Namespace}, servPort)
-	if err != nil && errors.IsNotFound(err) {
-		logger.Info(fmt.Sprintf("Target service port %s doesn't exist, creating it", targetServPort.Name))
-		err = r.Create(context.TODO(), targetServPort)
+		// Error creating replicating the secret - requeue the request.
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-	} else {
-		logger.Info(fmt.Sprintf("Target service port %s exists, updating it now", targetServPort))
-		err = r.Update(context.TODO(), targetServPort)
+
+		err = r.Get(context.TODO(), types.NamespacedName{Name: targetServPort.Name, Namespace: targetServPort.Namespace}, servPort)
+		if err != nil && errors.IsNotFound(err) {
+			logger.Info(fmt.Sprintf("Target service port %s doesn't exist, creating it", targetServPort.Name))
+			err = r.Create(context.TODO(), targetServPort)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		} else {
+			logger.Info(fmt.Sprintf("Target service port %s exists, updating it now", targetServPort))
+			err = r.Update(context.TODO(), targetServPort)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+
+		//*****************************************
+		// Define cluster
+		servClust := &corev1.Service{}
+
+		//*****************************************
+		// Create service cluster
+		helpers.CustomLogs("Create service Cluster IP", ctx, customLogger)
+
+		targetServClust, err := defineServiceClust(tenancyfrontend.Name, tenancyfrontend.Namespace)
+
+		// Error creating replicating the service cluster - requeue the request.
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-	}
 
-	//*****************************************
-	// Define cluster
-	servClust := &corev1.Service{}
+		err = r.Get(context.TODO(), types.NamespacedName{Name: targetServClust.Name, Namespace: targetServClust.Namespace}, servClust)
 
-	//*****************************************
-	// Create service cluster
-	helpers.CustomLogs("Create service Cluster IP", ctx, customLogger)
+		if err != nil && errors.IsNotFound(err) {
+			logger.Info(fmt.Sprintf("Target service cluster %s doesn't exist, creating it", targetServClust.Name))
+			err = r.Create(context.TODO(), targetServClust)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		} else {
+			logger.Info(fmt.Sprintf("Target service cluster %s exists, updating it now", targetServClust))
+			err = r.Update(context.TODO(), targetServClust)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		}
 
-	targetServClust, err := defineServiceClust(tenancyfrontend.Name, tenancyfrontend.Namespace)
+		//*****************************************
+		// Define secret
+		helpers.CustomLogs("Define secret", ctx, customLogger)
+		secret := &corev1.Secret{}
 
-	// Error creating replicating the service cluster - requeue the request.
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+		createUpdateSecrect()
+		deleteSecrect()
 
-	err = r.Get(context.TODO(), types.NamespacedName{Name: targetServClust.Name, Namespace: targetServClust.Namespace}, servClust)
+		//*****************************************
+		// Create secret appid.client-id-frontend
+		helpers.CustomLogs("Create secret appid.client-id-frontend", ctx, customLogger)
 
-	if err != nil && errors.IsNotFound(err) {
-		logger.Info(fmt.Sprintf("Target service cluster %s doesn't exist, creating it", targetServClust.Name))
-		err = r.Create(context.TODO(), targetServClust)
+		targetSecretName := "appid.client-id-frontend"
+		clientId := "b12a05c3-8164-45d9-a1b8-af1dedf8ccc3"
+
+		verifysecret, err := VerifySecretDeployment(clientset, ctx, namespace, tenancyfrontend.Name, targetSecretName)
+
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-	} else {
-		logger.Info(fmt.Sprintf("Target service cluster %s exists, updating it now", targetServClust))
-		err = r.Update(context.TODO(), targetServClust)
+
+		if !verifysecret {
+			targetSecret, err := defineSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_CLIENT_ID", clientId, tenancyfrontend.Name)
+			// Error creating replicating the secret - requeue the request.
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+
+			err = r.Get(context.TODO(), types.NamespacedName{Name: targetSecret.Name, Namespace: targetSecret.Namespace}, secret)
+			secretErr := verifySecrectStatus(ctx, r, targetSecretName, targetSecret, err)
+			if secretErr != nil && errors.IsNotFound(secretErr) {
+				return ctrl.Result{}, secretErr
+			}
+		}
+
+		//*****************************************
+		// Create secret appid.discovery-endpoint
+		targetSecretName = "appid.discovery-endpoint"
+		discoveryEndpoint := "https://eu-de.appid.cloud.ibm.com/oauth/v4/3793e3f8-ed31-42c9-9294-bc415fc58ab7/.well-known/openid-configuration"
+
+		verifysecret, err = VerifySecretDeployment(clientset, ctx, namespace, tenancyfrontend.Name, targetSecretName)
+
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-	}
 
-	//*****************************************
-	// Define secret
-	helpers.CustomLogs("Define secret", ctx, customLogger)
-	secret := &corev1.Secret{}
+		if !verifysecret {
 
-	createUpdateSecrect()
-	deleteSecrect()
+			targetSecret, err := defineSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_DISCOVERYENDPOINT", discoveryEndpoint, tenancyfrontend.Name)
+			// Error creating replicating the secret - requeue the request.
+			if err != nil {
+				return ctrl.Result{}, err
+			}
 
-	//*****************************************
-	// Create secret appid.client-id-frontend
-	helpers.CustomLogs("Create secret appid.client-id-frontend", ctx, customLogger)
-
-	targetSecretName := "appid.client-id-frontend"
-	clientId := "b12a05c3-8164-45d9-a1b8-af1dedf8ccc3"
-	targetSecret, err := defineSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_CLIENT_ID", clientId, tenancyfrontend.Name)
-	// Error creating replicating the secret - requeue the request.
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	err = r.Get(context.TODO(), types.NamespacedName{Name: targetSecret.Name, Namespace: targetSecret.Namespace}, secret)
-	secretErr := verifySecrectStatus(ctx, r, targetSecretName, targetSecret, err)
-	if secretErr != nil && errors.IsNotFound(secretErr) {
-		return ctrl.Result{}, secretErr
-	}
-
-	//*****************************************
-	// Create secret appid.discovery-endpoint
-	targetSecretName = "appid.discovery-endpoint"
-	discoveryEndpoint := "https://eu-de.appid.cloud.ibm.com/oauth/v4/3793e3f8-ed31-42c9-9294-bc415fc58ab7/.well-known/openid-configuration"
-	targetSecret, err = defineSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_DISCOVERYENDPOINT", discoveryEndpoint, tenancyfrontend.Name)
-	// Error creating replicating the secret - requeue the request.
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	err = r.Get(context.TODO(), types.NamespacedName{Name: targetSecret.Name, Namespace: targetSecret.Namespace}, secret)
-	secretErr = verifySecrectStatus(ctx, r, targetSecretName, targetSecret, err)
-	if secretErr != nil && errors.IsNotFound(secretErr) {
-		return ctrl.Result{}, secretErr
+			err = r.Get(context.TODO(), types.NamespacedName{Name: targetSecret.Name, Namespace: targetSecret.Namespace}, secret)
+			secretErr := verifySecrectStatus(ctx, r, targetSecretName, targetSecret, err)
+			if secretErr != nil && errors.IsNotFound(secretErr) {
+				return ctrl.Result{}, secretErr
+			}
+		}
 	}
 
 	logger.Info("Just return nil")
@@ -380,13 +423,16 @@ func (r *TenancyFrontendReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 // Create Secret definition
 func defineSecret(name string, namespace string, key string, value string, deploymentname string) (*corev1.Secret, error) {
-	m := make(map[string]string)
-	m[key] = value
+	secretdata := make(map[string]string)
+	secretdata[key] = value
 
 	// Define map for the labels
 	mlabel := make(map[string]string)
 	key = "deployment"
 	value = deploymentname
+	mlabel[key] = value
+	key = "tencanyfrontend"
+	value = "yes"
 	mlabel[key] = value
 
 	return &corev1.Secret{
@@ -394,7 +440,7 @@ func defineSecret(name string, namespace string, key string, value string, deplo
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace, Labels: mlabel},
 		Immutable:  new(bool),
 		Data:       map[string][]byte{},
-		StringData: m,
+		StringData: secretdata,
 		Type:       "Opaque",
 	}, nil
 }
@@ -496,12 +542,6 @@ func verifySecrectStatus(ctx context.Context, r *TenancyFrontendReconciler, targ
 // Restrictions:
 // - Only one deployment per namespace
 
-func verifyDeploymentExistsNamespace() error {
-
-	return nil
-
-}
-
 func createUpdateSecrect() error {
 
 	// 1. verify if the deployment exists
@@ -521,28 +561,79 @@ func deleteSecrect() error {
 	return nil
 }
 
-// Get all secrets
+// Verify if a secret for the TenancyFrontend exists
 
-func GetSecrets(clientset *kubernetes.Clientset, ctx context.Context,
-	namespace string) ([]v1.Secret, error) {
+func VerifySecretTenancyFrontend(clientset *kubernetes.Clientset, ctx context.Context,
+	namespace string, secretname string) (*v1.Secret, error) {
 
 	list, err := clientset.CoreV1().Secrets(namespace).List(ctx, metav1.ListOptions{})
+	secret_items := list.Items
+
 	if err != nil {
+		helpers.CustomLogs(err.Error(), ctx, customLogger)
 		return nil, err
+	} else {
+		for _, item := range secret_items {
+			mlabel := item.Labels
+			info := "Label app: [" + mlabel["tencanyfrontend"] + "] Name: [" + item.Name + "]"
+			helpers.CustomLogs(info, ctx, customLogger)
+			if (secretname == item.Name) && (mlabel["tencanyfrontend"] == "yes") {
+				return &item, err
+			}
+		}
 	}
 
-	return list.Items, nil
+	return nil, err
 }
 
-// Get all deployments
+// Verify if a secret for the deployment exists
 
-func GetDeployments(clientset *kubernetes.Clientset, ctx context.Context,
-	namespace string) ([]appsv1.Deployment, error) {
+func VerifySecretDeployment(clientset *kubernetes.Clientset, ctx context.Context,
+	namespace string, deploymentname string, secretname string) (bool, error) {
+
+	list, err := clientset.CoreV1().Secrets(namespace).List(ctx, metav1.ListOptions{})
+	secret_items := list.Items
+
+	if err != nil {
+		helpers.CustomLogs(err.Error(), ctx, customLogger)
+		return false, err
+	} else {
+		for _, item := range secret_items {
+			mlabel := item.Labels
+			info := "Label app: [" + mlabel["deployment"] + "] Name: [" + item.Name + "]"
+			helpers.CustomLogs(info, ctx, customLogger)
+			if (secretname == item.Name) && (mlabel["deployment"] == deploymentname) {
+				return true, err
+			}
+		}
+	}
+
+	return false, err
+}
+
+// Verify if q deployment exist in namespace
+
+func VerifyDeploymentExists(clientset *kubernetes.Clientset, ctx context.Context,
+	namespace string, kind string) (bool, error) {
 
 	list, err := clientset.AppsV1().Deployments(namespace).
 		List(ctx, metav1.ListOptions{})
+	deployment_items := list.Items
+
 	if err != nil {
-		return nil, err
+		helpers.CustomLogs(err.Error(), ctx, customLogger)
+		return false, err
+	} else {
+		for _, item := range deployment_items {
+			mlabel := item.Labels
+			info := "Label app: [" + mlabel["app"] + "] Name: [" + item.Name + "] Kind: [" + item.Kind + "]"
+			helpers.CustomLogs(info, ctx, customLogger)
+			if item.OwnerReferences != nil {
+				if kind == item.OwnerReferences[0].Kind {
+					return true, err
+				}
+			}
+		}
 	}
-	return list.Items, nil
+	return false, nil
 }
