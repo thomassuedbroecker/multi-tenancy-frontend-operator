@@ -120,7 +120,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	// Create service NodePort
 	helpers.CustomLogs("Create service NodePort", ctx, customLogger)
 
-	targetServPort, err := defineServiceNodePort(tenancyfrontend.Name, tenancyfrontend.Namespace)
+	targetServPort, err := r.defineServiceNodePort(tenancyfrontend.Name, tenancyfrontend.Namespace, tenancyfrontend)
 
 	// Error creating replicating the secret - requeue the request.
 	if err != nil {
@@ -150,7 +150,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	// Create service cluster
 	helpers.CustomLogs("Create service Cluster IP", ctx, customLogger)
 
-	targetServClust, err := defineServiceClust(tenancyfrontend.Name, tenancyfrontend.Namespace)
+	targetServClust, err := r.defineServiceClust(tenancyfrontend.Name, tenancyfrontend.Namespace, tenancyfrontend)
 
 	// Error creating replicating the service cluster - requeue the request.
 	if err != nil {
@@ -184,7 +184,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	targetSecretName := "appid.client-id-frontend"
 	clientId := "b12a05c3-8164-45d9-a1b8-af1dedf8ccc3"
-	targetSecret, err := defineSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_CLIENT_ID", clientId)
+	targetSecret, err := r.defineSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_CLIENT_ID", clientId, tenancyfrontend)
 	// Error creating replicating the secret - requeue the request.
 	if err != nil {
 		return ctrl.Result{}, err
@@ -200,7 +200,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	// Create secret appid.discovery-endpoint
 	targetSecretName = "appid.discovery-endpoint"
 	discoveryEndpoint := "https://eu-de.appid.cloud.ibm.com/oauth/v4/3793e3f8-ed31-42c9-9294-bc415fc58ab7/.well-known/openid-configuration"
-	targetSecret, err = defineSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_DISCOVERYENDPOINT", discoveryEndpoint)
+	targetSecret, err = r.defineSecret(targetSecretName, tenancyfrontend.Namespace, "VUE_APPID_DISCOVERYENDPOINT", discoveryEndpoint, tenancyfrontend)
 	// Error creating replicating the secret - requeue the request.
 	if err != nil {
 		return ctrl.Result{}, err
@@ -341,22 +341,27 @@ func (r *TenancyFrontendReconciler) SetupWithManager(mgr ctrl.Manager) error {
 // additional functions
 
 // Create Secret definition
-func defineSecret(name string, namespace string, key string, value string) (*corev1.Secret, error) {
+func (r *TenancyFrontendReconciler) defineSecret(name string, namespace string, key string, value string, frontend *v1alpha1.TenancyFrontend) (*corev1.Secret, error) {
 	m := make(map[string]string)
 	m[key] = value
 
-	return &corev1.Secret{
+	sec := &corev1.Secret{
 		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
 		Immutable:  new(bool),
 		Data:       map[string][]byte{},
 		StringData: m,
 		Type:       "Opaque",
-	}, nil
+	}
+
+	// Use it to ensure that the service will be deleted when the custom resource object is removed
+	ctrl.SetControllerReference(frontend, sec, r.Scheme)
+
+	return sec, nil
 }
 
 // Create Service NodePort definition
-func defineServiceNodePort(name string, namespace string) (*corev1.Service, error) {
+func (r *TenancyFrontendReconciler) defineServiceNodePort(name string, namespace string, frontend *v1alpha1.TenancyFrontend) (*corev1.Service, error) {
 	// Define map for the selector
 	mselector := make(map[string]string)
 	key := "app"
@@ -371,7 +376,7 @@ func defineServiceNodePort(name string, namespace string) (*corev1.Service, erro
 
 	var port int32 = 8080
 
-	return &corev1.Service{
+	serv := &corev1.Service{
 		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Service"},
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace, Labels: mlabel},
 		Spec: corev1.ServiceSpec{
@@ -382,11 +387,16 @@ func defineServiceNodePort(name string, namespace string) (*corev1.Service, erro
 			}},
 			Selector: mselector,
 		},
-	}, nil
+	}
+
+	// Use it to ensure that the service will be deleted when the custom resource object is removed
+	ctrl.SetControllerReference(frontend, serv, r.Scheme)
+
+	return serv, nil
 }
 
 // Create Service ClusterIP definition
-func defineServiceClust(name string, namespace string) (*corev1.Service, error) {
+func (r *TenancyFrontendReconciler) defineServiceClust(name string, namespace string, frontend *v1alpha1.TenancyFrontend) (*corev1.Service, error) {
 	// Define map for the selector
 	mselector := make(map[string]string)
 	key := "app"
@@ -403,7 +413,7 @@ func defineServiceClust(name string, namespace string) (*corev1.Service, error) 
 	var targetPort int32 = 8080
 	var clustserv = name + "clusterip"
 
-	return &corev1.Service{
+	serv := &corev1.Service{
 		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Service"},
 		ObjectMeta: metav1.ObjectMeta{Name: clustserv, Namespace: namespace, Labels: mlabel},
 		Spec: corev1.ServiceSpec{
@@ -414,7 +424,12 @@ func defineServiceClust(name string, namespace string) (*corev1.Service, error) 
 			}},
 			Selector: mselector,
 		},
-	}, nil
+	}
+
+	// Use it to ensure that the service will be deleted when the custom resource object is removed
+	ctrl.SetControllerReference(frontend, serv, r.Scheme)
+
+	return serv, nil
 }
 
 // Do all the tests for the status
