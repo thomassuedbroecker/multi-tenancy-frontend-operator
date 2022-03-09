@@ -354,7 +354,7 @@ func (r *TenancyFrontendReconciler) defineSecret(name string, namespace string, 
 		Type:       "Opaque",
 	}
 
-	// Use it to ensure that the service will be deleted when the custom resource object is removed
+	// Used to ensure that the secret will be deleted when the custom resource object is removed
 	ctrl.SetControllerReference(frontend, sec, r.Scheme)
 
 	return sec, nil
@@ -389,7 +389,7 @@ func (r *TenancyFrontendReconciler) defineServiceNodePort(name string, namespace
 		},
 	}
 
-	// Use it to ensure that the service will be deleted when the custom resource object is removed
+	// Used to ensure that the service will be deleted when the custom resource object is removed
 	ctrl.SetControllerReference(frontend, serv, r.Scheme)
 
 	return serv, nil
@@ -426,7 +426,7 @@ func (r *TenancyFrontendReconciler) defineServiceClust(name string, namespace st
 		},
 	}
 
-	// Use it to ensure that the service will be deleted when the custom resource object is removed
+	// Used to ensure that the service will be deleted when the custom resource object is removed
 	ctrl.SetControllerReference(frontend, serv, r.Scheme)
 
 	return serv, nil
