@@ -342,15 +342,15 @@ func (r *TenancyFrontendReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 // Create Secret definition
 func (r *TenancyFrontendReconciler) defineSecret(name string, namespace string, key string, value string, frontend *v1alpha1.TenancyFrontend) (*corev1.Secret, error) {
-	m := make(map[string]string)
-	m[key] = value
+	secret := make(map[string]string)
+	secret[key] = value
 
 	sec := &corev1.Secret{
 		TypeMeta:   metav1.TypeMeta{APIVersion: "v1", Kind: "Secret"},
 		ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace},
 		Immutable:  new(bool),
 		Data:       map[string][]byte{},
-		StringData: m,
+		StringData: secret,
 		Type:       "Opaque",
 	}
 
