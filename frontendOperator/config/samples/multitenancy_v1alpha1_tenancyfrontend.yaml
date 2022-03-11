@@ -2,7 +2,10 @@ apiVersion: multitenancy.example.net/v1alpha1
 kind: TenancyFrontend
 metadata:
   name: tenancyfrontendsample
+mysection:
+  myvalue: Hello-this-is-my-value-for-the-new-section
 spec:
   # TODO(user): Add fields here
   size: 1
   displayname: MyFrontendDisplayname
+

@@ -33,6 +33,11 @@ type TenancyFrontendSpec struct {
 	DisplayName string `json:"displayname,omitempty"`
 }
 
+// TenancyFrontendMySection defines the desired state of TenancyFrontend
+type TenancyFrontendMySection struct {
+	MyValue string `json:"myvalue,omitempty"`
+}
+
 // TenancyFrontendStatus defines the observed state of TenancyFrontend
 type TenancyFrontendStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
@@ -47,8 +52,9 @@ type TenancyFrontend struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   TenancyFrontendSpec   `json:"spec,omitempty"`
-	Status TenancyFrontendStatus `json:"status,omitempty"`
+	Spec      TenancyFrontendSpec      `json:"spec,omitempty"`
+	Status    TenancyFrontendStatus    `json:"status,omitempty"`
+	MySection TenancyFrontendMySection `json:"mysection,omitempty"`
 }
 
 //+kubebuilder:object:root=true

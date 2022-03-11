@@ -32,6 +32,12 @@ spec:
             type: string
           metadata:
             type: object
+          mysection:
+            description: TenancyFrontendMySection defines the desired state of TenancyFrontend
+            properties:
+              myvalue:
+                type: string
+            type: object
           spec:
             description: TenancyFrontendSpec defines the desired state of TenancyFrontend
             properties:

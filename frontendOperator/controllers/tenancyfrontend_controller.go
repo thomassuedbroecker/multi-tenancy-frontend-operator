@@ -75,6 +75,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	logger.Info("Verify if a CRD of TenancyFrontend exists")
 	tenancyfrontend := &multitenancyv1alpha1.TenancyFrontend{}
 	err := r.Get(ctx, req.NamespacedName, tenancyfrontend)
+	logger.Info("Info: The new vaule [" + tenancyfrontend.MySection.MyValue + "]")
 
 	if err != nil {
 		if errors.IsNotFound(err) {
