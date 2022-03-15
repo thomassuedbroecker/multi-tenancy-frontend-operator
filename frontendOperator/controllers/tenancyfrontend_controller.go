@@ -58,6 +58,8 @@ var customLogger bool = true
 //+kubebuilder:rbac:groups=multitenancy.example.net,resources=tenancyfrontends/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -339,7 +341,6 @@ func (r *TenancyFrontendReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 // ********************************************************
 // additional functions
-
 // Create Secret definition
 func (r *TenancyFrontendReconciler) defineSecret(name string, namespace string, key string, value string, frontend *v1alpha1.TenancyFrontend) (*corev1.Secret, error) {
 	secret := make(map[string]string)
@@ -361,6 +362,7 @@ func (r *TenancyFrontendReconciler) defineSecret(name string, namespace string, 
 }
 
 // Create Service NodePort definition
+
 func (r *TenancyFrontendReconciler) defineServiceNodePort(name string, namespace string, frontend *v1alpha1.TenancyFrontend) (*corev1.Service, error) {
 	// Define map for the selector
 	mselector := make(map[string]string)
@@ -396,6 +398,7 @@ func (r *TenancyFrontendReconciler) defineServiceNodePort(name string, namespace
 }
 
 // Create Service ClusterIP definition
+
 func (r *TenancyFrontendReconciler) defineServiceClust(name string, namespace string, frontend *v1alpha1.TenancyFrontend) (*corev1.Service, error) {
 	// Define map for the selector
 	mselector := make(map[string]string)
@@ -433,6 +436,12 @@ func (r *TenancyFrontendReconciler) defineServiceClust(name string, namespace st
 }
 
 // Do all the tests for the status
+//+kubebuilder:rbac:groups=multitenancy.example.net,resources=tenancyfrontends,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=multitenancy.example.net,resources=tenancyfrontends/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=multitenancy.example.net,resources=tenancyfrontends/finalizers,verbs=update
+//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
+
 func verifySecrectStatus(ctx context.Context, r *TenancyFrontendReconciler, targetSecretName string, targetSecret *v1.Secret, err error) error {
 	logger := log.FromContext(ctx)
 
