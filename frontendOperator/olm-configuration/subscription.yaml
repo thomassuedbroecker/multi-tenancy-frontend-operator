@@ -2,9 +2,9 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: frontendoperator-v0-0-2-sub
-  namespace: operator
+  namespace: operators
 spec:
   channel: alpha
-  name: frontendoperator
-  source: frontend-operator-catalog
-  sourceNamespace: operator
+  name: frontendoperator-2
+  source: frontend-operator-catalog-2
+  sourceNamespace: operators
