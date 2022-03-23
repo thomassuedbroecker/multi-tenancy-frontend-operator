@@ -33,9 +33,13 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	// Add to define the own deployment 'yaml' configuration
-	"github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v1alpha1"
+
 	multitenancyv1alpha1 "github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v1alpha1"
+	"github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v2alpha2"
 	"github.com/thomassuedbroecker/multi-tenancy-frontend-operator/helpers"
+
+	// new version
+	multitenancyv2alpha2 "github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v2alpha2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -75,8 +79,20 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 
 	// "Verify if a CRD of TenancyFrontend exists"
 	logger.Info("Verify if a CRD of TenancyFrontend exists")
-	tenancyfrontend := &multitenancyv1alpha1.TenancyFrontend{}
-	err := r.Get(ctx, req.NamespacedName, tenancyfrontend)
+	tenancyfrontend_old := &multitenancyv1alpha1.TenancyFrontend{}
+	err := r.Get(ctx, req.NamespacedName, tenancyfrontend_old)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			logger.Info("TenancyFrontend v1alpha1 resource not found.")
+		}
+		// Error reading the object - requeue the request.
+		logger.Info("Failed to get TenancyFrontend v1alpha1")
+	} else {
+		logger.Info("Got an old TenancyFrontend v1alpha1, object this will not be used!")
+	}
+
+	tenancyfrontend := &multitenancyv2alpha2.TenancyFrontend{}
+	err = r.Get(ctx, req.NamespacedName, tenancyfrontend)
 
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -219,7 +235,7 @@ func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 }
 
 // deploymentForTenancyFronted returns a tenancyfrontend Deployment object
-func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(frontend *v1alpha1.TenancyFrontend, ctx context.Context) *appsv1.Deployment {
+func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(frontend *v2alpha2.TenancyFrontend, ctx context.Context) *appsv1.Deployment {
 	logger := log.FromContext(ctx)
 	ls := labelsForTenancyFrontend(frontend.Name, frontend.Name)
 	replicas := frontend.Spec.Size
@@ -295,7 +311,7 @@ func (r *TenancyFrontendReconciler) deploymentForTenancyFronted(frontend *v1alph
 								Value: "VUE_APP_API_URL_ORDERS_VALUE",
 							},
 							{Name: "VUE_APP_CATEGORY_NAME",
-								Value: "VUE_APP_CATEGORY_NAME_VALUE",
+								Value: frontend.Spec.CatalogName,
 							},
 							{Name: "VUE_APP_HEADLINE",
 								Value: frontend.Spec.DisplayName,
@@ -335,14 +351,14 @@ func labelsForTenancyFrontend(name_app string, name_cr string) map[string]string
 // SetupWithManager sets up the controller with the Manager.
 func (r *TenancyFrontendReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&multitenancyv1alpha1.TenancyFrontend{}).
+		For(&multitenancyv2alpha2.TenancyFrontend{}).
 		Complete(r)
 }
 
 // ********************************************************
 // additional functions
 // Create Secret definition
-func (r *TenancyFrontendReconciler) defineSecret(name string, namespace string, key string, value string, frontend *v1alpha1.TenancyFrontend) (*corev1.Secret, error) {
+func (r *TenancyFrontendReconciler) defineSecret(name string, namespace string, key string, value string, frontend *v2alpha2.TenancyFrontend) (*corev1.Secret, error) {
 	secret := make(map[string]string)
 	secret[key] = value
 
@@ -363,7 +379,7 @@ func (r *TenancyFrontendReconciler) defineSecret(name string, namespace string, 
 
 // Create Service NodePort definition
 
-func (r *TenancyFrontendReconciler) defineServiceNodePort(name string, namespace string, frontend *v1alpha1.TenancyFrontend) (*corev1.Service, error) {
+func (r *TenancyFrontendReconciler) defineServiceNodePort(name string, namespace string, frontend *v2alpha2.TenancyFrontend) (*corev1.Service, error) {
 	// Define map for the selector
 	mselector := make(map[string]string)
 	key := "app"
@@ -399,7 +415,7 @@ func (r *TenancyFrontendReconciler) defineServiceNodePort(name string, namespace
 
 // Create Service ClusterIP definition
 
-func (r *TenancyFrontendReconciler) defineServiceClust(name string, namespace string, frontend *v1alpha1.TenancyFrontend) (*corev1.Service, error) {
+func (r *TenancyFrontendReconciler) defineServiceClust(name string, namespace string, frontend *v2alpha2.TenancyFrontend) (*corev1.Service, error) {
 	// Define map for the selector
 	mselector := make(map[string]string)
 	key := "app"
