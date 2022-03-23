@@ -2,9 +2,9 @@
 
 echo "-> Git Clone"
 echo ""
-git clone https://github.com/thomassuedbroecker/multi-tenancy-frontend-operator
-cd multi-tenancy-frontend-operator/frontendOperator
-git checkout "update-operator"
+# git clone https://github.com/thomassuedbroecker/multi-tenancy-frontend-operator
+# cd multi-tenancy-frontend-operator/frontendOperator
+# git checkout "update-operator"
 echo ""
 
 echo ""
