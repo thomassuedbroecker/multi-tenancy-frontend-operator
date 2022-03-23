@@ -107,12 +107,12 @@ run: manifests generate fmt vet ## Run a controller from your host.
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
-	docker build -t ${IMG} .
+	podman build -t ${IMG} .
 #	podman build -t ${IMG} .
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
-    docker push ${IMG}
+    podman push ${IMG}
 #	podman push ${IMG}
 
 ##@ Deployment
@@ -176,7 +176,7 @@ bundle: manifests kustomize ## Generate bundle manifests and metadata, then vali
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.
-	docker build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
+	podman build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
   ##podman build -f bundle.Dockerfile -t $(BUNDLE_IMG) .
 
 .PHONY: bundle-push
