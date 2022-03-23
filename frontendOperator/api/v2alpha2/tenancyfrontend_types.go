@@ -46,8 +46,9 @@ type TenancyFrontendStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:storageversion
 
 // TenancyFrontend is the Schema for the tenancyfrontends API
 type TenancyFrontend struct {
