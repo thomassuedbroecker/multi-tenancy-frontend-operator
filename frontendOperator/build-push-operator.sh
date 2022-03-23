@@ -1,5 +1,13 @@
 #!/bin/bash
 
+echo "-> Git Clone"
+echo ""
+git clone https://github.com/thomassuedbroecker/multi-tenancy-frontend-operator
+cd multi-tenancy-frontend-operator/frontendOperator
+git checkout "update-operator"
+echo ""
+
+echo ""
 echo "-> Build contoller manager image"
 echo ""
 
@@ -50,5 +58,8 @@ echo "-> push catalog"
 docker push "$REGISTRY/$ORG/$CATALOG_IMAGE:$CATALOG_TAG"
 echo ""
 
-kubectl apply -f "olm-configuration/catalogsource.yaml" -n operators
-kubectl apply -f "olm-configuration/subscription.yaml" -n operators
+echo ""
+echo "-> kubernetes"
+kubectl apply -f "./olm-configuration/catalogsource.yaml" -n operators
+kubectl apply -f "./olm-configuration/subscription.yaml" -n operators
+kubectl apply -f config/samples/multitenancy_v2alpha2_tenancyfrontend.yaml -n default
