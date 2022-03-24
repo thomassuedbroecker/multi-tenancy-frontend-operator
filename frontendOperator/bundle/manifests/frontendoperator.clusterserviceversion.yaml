@@ -14,12 +14,24 @@ metadata:
             "displayname": "MyFrontendDisplayname",
             "size": 1
           }
+        },
+        {
+          "apiVersion": "multitenancy.example.net/v2alpha2",
+          "kind": "TenancyFrontend",
+          "metadata": {
+            "name": "tenancyfrontend-sample"
+          },
+          "spec": {
+            "catalogname": "Movies",
+            "displayname": "Movie-Store",
+            "size": 1
+          }
         }
       ]
     capabilities: Basic Install
     operators.operatorframework.io/builder: operator-sdk-v1.17.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
-  name: frontendoperator.v0.0.1
+  name: frontendoperator.v0.0.2
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -30,6 +42,11 @@ spec:
       kind: TenancyFrontend
       name: tenancyfrontends.multitenancy.example.net
       version: v1alpha1
+    - description: TenancyFrontend is the Schema for the tenancyfrontends API
+      displayName: Tenancy Frontend
+      kind: TenancyFrontend
+      name: tenancyfrontends.multitenancy.example.net
+      version: v2alpha2
   description: This is an example operator to deploy a simple web application
   displayName: FrontendOperator
   icon:
@@ -162,7 +179,7 @@ spec:
                 - --leader-elect
                 command:
                 - /manager
-                image: quay.io/tsuedbroecker/frontendcontroller:v3
+                image: quay.io/tsuedbroecker/frontendcontroller:v4
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -244,4 +261,4 @@ spec:
   maturity: alpha
   provider:
     name: Thomas Suedbroecker
-  version: 0.0.1
+  version: 0.0.2

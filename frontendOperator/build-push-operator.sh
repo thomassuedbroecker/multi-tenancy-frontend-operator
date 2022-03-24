@@ -20,8 +20,10 @@ echo ""
 echo "-> build"
 echo "-> $REGISTRY/$ORG/$CONTROLLER_IMAGE"
 echo ""
+
 make generate
 make manifests
+operator-sdk generate kustomize manifests
 make docker-build IMG="$REGISTRY/$ORG/$CONTROLLER_IMAGE"
 
 echo ""
@@ -39,6 +41,12 @@ echo "-> build bundle"
 export BUNDLE_IMAGE='bundlefrontendoperator:v4'
 make bundle-build BUNDLE_IMG="$REGISTRY/$ORG/$BUNDLE_IMAGE"
 echo ""
+
+# export REGISTRY='quay.io'
+# export ORG='tsuedbroecker'
+# export BUNDLE_IMAGE='bundlefrontendoperator:v4'
+# echo "Image: $REGISTRY/$ORG/$BUNDLE_IMAGE"
+# operator-sdk run bundle "$REGISTRY/$ORG/$BUNDLE_IMAGE" -n operators
 
 echo ""
 echo "-> push bundle"
@@ -61,5 +69,8 @@ echo ""
 echo ""
 echo "-> kubernetes"
 kubectl apply -f "./olm-configuration/catalogsource.yaml" -n operators
+# kubectl delete -f "./olm-configuration/catalogsource.yaml" -n operators
 kubectl apply -f "./olm-configuration/subscription.yaml" -n operators
+# kubectl delete -f "./olm-configuration/subscription.yaml" -n operators
 kubectl apply -f config/samples/multitenancy_v2alpha2_tenancyfrontend.yaml -n default
+# kubectl delete -f config/samples/multitenancy_v2alpha2_tenancyfrontend.yaml -n default
