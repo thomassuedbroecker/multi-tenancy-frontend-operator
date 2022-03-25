@@ -5,6 +5,7 @@ metadata:
   namespace: operators
 spec:
   channel: alpha
-  name: frontendoperator-2
-  source: frontend-operator-catalog-2
+  name: frontendoperator
+  source: frontend-operator-catalog
   sourceNamespace: operators
+  installPlanApproval: Manual
