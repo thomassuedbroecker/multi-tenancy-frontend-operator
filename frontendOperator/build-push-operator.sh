@@ -23,7 +23,7 @@ echo ""
 
 make generate
 make manifests
-operator-sdk generate kustomize manifests
+# operator-sdk generate kustomize manifests
 make docker-build IMG="$REGISTRY/$ORG/$CONTROLLER_IMAGE"
 
 echo ""
@@ -74,3 +74,6 @@ kubectl apply -f "./olm-configuration/subscription.yaml" -n operators
 # kubectl delete -f "./olm-configuration/subscription.yaml" -n operators
 kubectl apply -f config/samples/multitenancy_v2alpha2_tenancyfrontend.yaml -n default
 # kubectl delete -f config/samples/multitenancy_v2alpha2_tenancyfrontend.yaml -n default
+
+#kubectl get catalogsource  frontend-operator-catalog-2 -n operators -oyaml
+#kubectl get subscriptions frontendoperator-v0-0-2-sub -n operators -oyaml 
