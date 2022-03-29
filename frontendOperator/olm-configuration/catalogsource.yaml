@@ -4,10 +4,10 @@ metadata:
   name: frontend-operator-catalog
   namespace: operators
 spec:
-  displayName: Frontend Operator
+  displayName: Frontend Operator Catalog
   publisher: Thomas Suedbroecker
   sourceType: grpc
-  image: quay.io/tsuedbroecker/frontend-catalog:v0.0.2 
+  image: quay.io/tsuedbroecker/frontend-catalog:v0.0.3 
   updateStrategy:
     registryPoll:
       interval: 10m
