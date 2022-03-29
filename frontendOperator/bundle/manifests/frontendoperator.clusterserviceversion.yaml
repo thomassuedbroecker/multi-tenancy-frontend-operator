@@ -16,6 +16,18 @@ metadata:
           }
         },
         {
+          "apiVersion": "multitenancy.example.net/v1beta1",
+          "kind": "TenancyFrontend",
+          "metadata": {
+            "name": "tenancyfrontend-sample"
+          },
+          "spec": {
+            "catalogname": "Movies",
+            "displayname": "Movie-Store",
+            "size": 1
+          }
+        },
+        {
           "apiVersion": "multitenancy.example.net/v2alpha2",
           "kind": "TenancyFrontend",
           "metadata": {
@@ -31,7 +43,7 @@ metadata:
     capabilities: Basic Install
     operators.operatorframework.io/builder: operator-sdk-v1.17.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
-  name: frontendoperator.v0.0.2
+  name: frontendoperator.v0.0.3
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -42,6 +54,11 @@ spec:
       kind: TenancyFrontend
       name: tenancyfrontends.multitenancy.example.net
       version: v1alpha1
+    - description: TenancyFrontend is the Schema for the tenancyfrontends API
+      displayName: Tenancy Frontend
+      kind: TenancyFrontend
+      name: tenancyfrontends.multitenancy.example.net
+      version: v1beta1
     - description: TenancyFrontend is the Schema for the tenancyfrontends API
       displayName: Tenancy Frontend
       kind: TenancyFrontend
@@ -179,7 +196,7 @@ spec:
                 - --leader-elect
                 command:
                 - /manager
-                image: quay.io/tsuedbroecker/frontendcontroller:v4
+                image: quay.io/tsuedbroecker/frontendcontroller:v5
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -187,6 +204,10 @@ spec:
                   initialDelaySeconds: 15
                   periodSeconds: 20
                 name: manager
+                ports:
+                - containerPort: 9443
+                  name: webhook-server
+                  protocol: TCP
                 readinessProbe:
                   httpGet:
                     path: /readyz
@@ -202,10 +223,19 @@ spec:
                     memory: 64Mi
                 securityContext:
                   allowPrivilegeEscalation: false
+                volumeMounts:
+                - mountPath: /tmp/k8s-webhook-server/serving-certs
+                  name: cert
+                  readOnly: true
               securityContext:
                 runAsNonRoot: true
               serviceAccountName: frontendoperator-controller-manager
               terminationGracePeriodSeconds: 10
+              volumes:
+              - name: cert
+                secret:
+                  defaultMode: 420
+                  secretName: webhook-server-cert
       permissions:
       - rules:
         - apiGroups:
@@ -261,4 +291,18 @@ spec:
   maturity: alpha
   provider:
     name: Thomas Suedbroecker
-  version: 0.0.2
+  version: 0.0.3
+  webhookdefinitions:
+  - admissionReviewVersions:
+    - v1beta1
+    - v1alpha1
+    - v2alpha2
+    containerPort: 443
+    conversionCRDs:
+    - tenancyfrontends.multitenancy.example.net
+    deploymentName: frontendoperator-controller-manager
+    generateName: ctenancyfrontends.kb.io
+    sideEffects: None
+    targetPort: 9443
+    type: ConversionWebhook
+    webhookPath: /convert
