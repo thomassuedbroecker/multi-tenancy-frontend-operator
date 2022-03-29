@@ -89,6 +89,10 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "TenancyFrontend")
 		os.Exit(1)
 	}
+	if err = (&multitenancyv1beta1.TenancyFrontend{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "TenancyFrontend")
+		os.Exit(1)
+	}
 	//+kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
