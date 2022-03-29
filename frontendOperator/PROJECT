@@ -24,4 +24,12 @@ resources:
   kind: TenancyFrontend
   path: github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v2alpha2
   version: v2alpha2
+- api:
+    crdVersion: v1
+    namespaced: true
+  domain: example.net
+  group: multitenancy
+  kind: TenancyFrontend
+  path: github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v1beta1
+  version: v1beta1
 version: "3"

@@ -2,4 +2,5 @@
 resources:
 - multitenancy_v1alpha1_tenancyfrontend.yaml
 - multitenancy_v2alpha2_tenancyfrontend.yaml
+- multitenancy_v1beta1_tenancyfrontend.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

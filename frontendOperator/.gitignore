@@ -28,3 +28,7 @@ testbin/*
 
 # Custom
 connect-to-vsi.sh
+connect-to-kubernetes-cluster-ibmcloud.sh
+copy-project-to-vsi.sh
+
+operator-sdk create webhook --group application.sample --version v1alpha1 --kind Application --resource --defaulting --programmatic-validation --conversion

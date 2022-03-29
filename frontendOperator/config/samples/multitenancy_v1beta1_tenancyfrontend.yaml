@@ -1,0 +1,9 @@
+apiVersion: multitenancy.example.net/v1beta1
+kind: TenancyFrontend
+metadata:
+  name: tenancyfrontend-sample
+spec:
+  # TODO(user): Add fields here
+  size: 1
+  displayname: "Movie-Store"
+  catalogname: Movies

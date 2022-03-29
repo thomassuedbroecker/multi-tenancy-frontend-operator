@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	multitenancyv1alpha1 "github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v1alpha1"
+	multitenancyv1beta1 "github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v1beta1"
 	multitenancyv2alpha2 "github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v2alpha2"
 	"github.com/thomassuedbroecker/multi-tenancy-frontend-operator/controllers"
 	//+kubebuilder:scaffold:imports
@@ -47,6 +48,7 @@ func init() {
 
 	utilruntime.Must(multitenancyv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(multitenancyv2alpha2.AddToScheme(scheme))
+	utilruntime.Must(multitenancyv1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
