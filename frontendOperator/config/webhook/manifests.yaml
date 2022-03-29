@@ -1,0 +1,54 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-multitenancy-example-net-v1beta1-tenancyfrontend
+  failurePolicy: Fail
+  name: mtenancyfrontend.kb.io
+  rules:
+  - apiGroups:
+    - multitenancy.example.net
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - tenancyfrontends
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-multitenancy-example-net-v1beta1-tenancyfrontend
+  failurePolicy: Fail
+  name: vtenancyfrontend.kb.io
+  rules:
+  - apiGroups:
+    - multitenancy.example.net
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - tenancyfrontends
+  sideEffects: None
