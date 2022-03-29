@@ -17,7 +17,9 @@ limitations under the License.
 package v2alpha2
 
 import (
+	"github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/conversion"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -67,6 +69,33 @@ type TenancyFrontendList struct {
 	Items           []TenancyFrontend `json:"items"`
 }
 
+// functions
+
 func init() {
 	SchemeBuilder.Register(&TenancyFrontend{}, &TenancyFrontendList{})
+}
+
+// ConvertTo converts this v2alpha2 to v1beta1. (upgrade)
+func (src *TenancyFrontend) ConvertTo(dstRaw conversion.Hub) error {
+
+	dst := dstRaw.(*v1beta1.TenancyFrontend)
+	dst.ObjectMeta = src.ObjectMeta
+	dst.Spec.DisplayName = src.Spec.DisplayName
+	dst.Spec.Size = src.Spec.Size
+	dst.Spec.CatalogName = src.Spec.CatalogName
+
+	return nil
+}
+
+// ConvertFrom converts from the Hub version (v1beta1) to (v2alpha2). (downgrade)
+func (dst *TenancyFrontend) ConvertFrom(srcRaw conversion.Hub) error {
+
+	src := srcRaw.(*v1beta1.TenancyFrontend)
+
+	dst.ObjectMeta = src.ObjectMeta
+	dst.Spec.DisplayName = src.Spec.DisplayName
+	dst.Spec.Size = src.Spec.Size
+	dst.Spec.CatalogName = src.Spec.CatalogName
+
+	return nil
 }

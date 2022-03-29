@@ -68,6 +68,10 @@ type TenancyFrontendList struct {
 	Items           []TenancyFrontend `json:"items"`
 }
 
+// functions
+
 func init() {
 	SchemeBuilder.Register(&TenancyFrontend{}, &TenancyFrontendList{})
 }
+
+func (*TenancyFrontend) Hub() {}

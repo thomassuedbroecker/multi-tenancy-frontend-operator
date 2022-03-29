@@ -17,7 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/thomassuedbroecker/multi-tenancy-frontend-operator/api/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/conversion"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -60,6 +62,56 @@ type TenancyFrontendList struct {
 	Items           []TenancyFrontend `json:"items"`
 }
 
+// functions
+
 func init() {
 	SchemeBuilder.Register(&TenancyFrontend{}, &TenancyFrontendList{})
+}
+
+// ConvertTo converts this v1alpha1 to v1beta1. (upgrade)
+func (src *TenancyFrontend) ConvertTo(dstRaw conversion.Hub) error {
+
+	dst := dstRaw.(*v1beta1.TenancyFrontend)
+	dst.ObjectMeta = src.ObjectMeta
+
+	// defined in "v1beta1"
+	// -------------------------------
+	// kubebuilder:validation:Required
+	// kubebuilder:validation:MaxLength=15
+	maxLength := 15
+	if len(src.Spec.DisplayName) > maxLength {
+		dst.Spec.DisplayName = src.Spec.DisplayName[:maxLength]
+	} else {
+		dst.Spec.DisplayName = src.Spec.DisplayName
+	}
+
+	// defined in "v1beta1"
+	// -------------------------------
+	// kubebuilder:validation:Required
+	// kubebuilder:validation:Minimum=0
+	if src.Spec.Size < 0 {
+		dst.Spec.Size = 0
+	} else {
+		dst.Spec.Size = src.Spec.Size
+	}
+
+	// defined in "v1beta1v1beta1"
+	// -------------------------------
+	// kubebuilder:validation:MaxLength=15
+	// kubebuilder:default:=Movies
+	dst.Spec.CatalogName = "Movies"
+
+	return nil
+}
+
+// ConvertFrom converts from the Hub version (v1beta1) to (v1alpha1). (downgrade)
+func (dst *TenancyFrontend) ConvertFrom(srcRaw conversion.Hub) error {
+
+	src := srcRaw.(*v1beta1.TenancyFrontend)
+	dst.ObjectMeta = src.ObjectMeta
+
+	dst.Spec.Size = src.Spec.Size
+	dst.Spec.DisplayName = src.Spec.DisplayName
+
+	return nil
 }
