@@ -7,7 +7,7 @@ spec:
   displayName: Frontend Operator Catalog
   publisher: Thomas Suedbroecker
   sourceType: grpc
-  image: quay.io/tsuedbroecker/frontend-catalog:v0.0.3 
+  image: quay.io/tsuedbroecker/frontend-catalog:v0.0.4 
   updateStrategy:
     registryPoll:
       interval: 10m
