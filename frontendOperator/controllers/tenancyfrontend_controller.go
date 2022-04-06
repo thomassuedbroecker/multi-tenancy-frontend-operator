@@ -73,6 +73,10 @@ var customLogger bool = true
 func (r *TenancyFrontendReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
+	// Add metrics information
+	goobers.Inc()
+	gooberFailures.Inc()
+
 	// "Verify if a CRD of TenancyFrontend exists"
 	logger.Info("Verify if a CRD of TenancyFrontend exists")
 	tenancyfrontend := &multitenancyv1alpha1.TenancyFrontend{}

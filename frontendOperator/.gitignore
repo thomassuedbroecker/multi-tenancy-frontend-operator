@@ -25,3 +25,10 @@ testbin/*
 *.swp
 *.swo
 *~
+
+# Custom
+connect-to-vsi.sh
+connect-to-kubernetes-cluster-ibmcloud.sh
+copy-project-to-vsi.sh
+connect*.sh
+temp
