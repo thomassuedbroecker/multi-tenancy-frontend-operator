@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  annotations:
+    service.kubernetes.io/ibm-load-balancer-cloud-provider-ip-type: "public" # ibm cloud specific
+                                                                             # running a Kubernetes cluster on IBM Cloud in VPC
+spec:
+  type: LoadBalancer
+  ports:
+  - name: web
+    port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    prometheus: prometheus
