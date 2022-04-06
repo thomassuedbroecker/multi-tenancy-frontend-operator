@@ -66,3 +66,30 @@ function setupPrometheusForExampleApplication () {
     echo "8-prom-expose-ui-loadbalancer.yaml"
     kubectl apply -f 8-prom-expose-ui-loadbalancer.yaml -n default
 }
+
+function verifyExampleApplication () {
+    # verify the installation does the csv exist
+    kubectl get csv -n default | grep "prometheusoperator"
+    kubectl get pods -n default -o wide --show-labels
+    kubectl get service -n default  -o wide --show-labels
+    kubectl get servicemonitor -n default  -o wide --show-labels
+    kubectl get prometheus -n default  -o wide --show-labels
+    kubectl get prometheus prometheus -n default  -oyaml
+    kubectl get clusterrole prometheus -n default  -o wide --show-labels
+    kubectl get clusterrolebinding prometheus -n default  -o wide --show-labels
+    kubectl get configmap -n default -o wide --show-labels
+    kubectl get configmap prometheus-prometheus-rulefiles-0 -n default -oyaml
+    kubectl get secret prometheus-prometheus -n default -o yaml
+}
+
+# **********************************************************************************
+# Execution
+# **********************************************************************************
+
+connectToIBMCluster
+
+setupExampleApplication
+
+setupPrometheusForExampleApplication
+
+verifyExampleApplication
