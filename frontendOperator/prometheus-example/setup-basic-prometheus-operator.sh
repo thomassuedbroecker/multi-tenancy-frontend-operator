@@ -59,12 +59,15 @@ function setupPrometheusForExampleApplication () {
 
     echo "6-prom-cluster-role-binding.yaml"
     kubectl apply -f 6-prom-cluster-role-binding.yaml -n default
+    kubectl get clusterrolebinding -n default
 
     echo "7-prom-instance-servicemonitor-selector-configured.yaml"
     kubectl apply -f 7-prom-instance-servicemonitor-selector-configured.yaml -n default
+    kubectl get servicemonitor -n default
 
     echo "8-prom-expose-ui-loadbalancer.yaml"
     kubectl apply -f 8-prom-expose-ui-loadbalancer.yaml -n default
+    kubectl get service -n default
 }
 
 function verifyExampleApplication () {
@@ -86,10 +89,26 @@ function verifyExampleApplication () {
 # Execution
 # **********************************************************************************
 
+echo "************************************"
+echo " connectToIBMCluster"
+echo "************************************"
+
 connectToIBMCluster
+
+echo "************************************"
+echo " setupExampleApplication"
+echo "************************************"
 
 setupExampleApplication
 
+echo "************************************"
+echo " setupPrometheusForExampleApplication"
+echo "************************************"
+
 setupPrometheusForExampleApplication
+
+echo "************************************"
+echo " verifyExampleApplication"
+echo "************************************"
 
 verifyExampleApplication

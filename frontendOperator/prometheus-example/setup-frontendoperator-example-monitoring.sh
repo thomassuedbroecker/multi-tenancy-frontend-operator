@@ -58,8 +58,20 @@ function reconfigurePrometheusInstance () {
 # Execution
 # **********************************************************************************
 
+echo "************************************"
+echo " connectToIBMCluster"
+echo "************************************"
+
 connectToIBMCluster
 
+echo "************************************"
+echo " setupFrontendOperator "
+echo "************************************"
+
 setupFrontendOperator 
+
+echo "************************************"
+echo "reconfigurePrometheusInstance "
+echo "************************************"
 
 reconfigurePrometheusInstance
