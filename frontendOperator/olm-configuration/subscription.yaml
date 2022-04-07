@@ -4,7 +4,7 @@ metadata:
   name: frontendoperator-v0-0-3-sub
   namespace: operators
 spec:
-  channel: beta
+  channel: alpha
   name: frontendoperator
   source: frontend-operator-catalog
   sourceNamespace: operators
