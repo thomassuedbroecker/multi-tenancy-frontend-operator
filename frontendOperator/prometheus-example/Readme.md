@@ -30,3 +30,18 @@ setup-frontendoperator-example-monitoring.sh
 
 _Note:_ The documentation related to that example you find [here](https://wp.me/paelj4-1iv).
 
+### Clean-up all
+
+These are the steps which will be executed by the script:
+
+* Connect to the IBM Cloud cluster
+* Delete the custom operator
+* Delete example app and Prometheus instance
+* Delete Prometheus operator and OLM
+
+```sh
+sh cleanup-all.sh
+```
+
+
+
