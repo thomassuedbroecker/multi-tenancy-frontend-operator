@@ -26,5 +26,7 @@ testbin/*
 *.swo
 *~
 
-# Custom
-connect-to-vsi.sh
+# custome
+/temp
+connect*
+copy-pro*
