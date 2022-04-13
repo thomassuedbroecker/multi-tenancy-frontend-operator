@@ -32,3 +32,4 @@ connect-to-kubernetes-cluster-ibmcloud.sh
 copy-project-to-vsi.sh
 connect*.sh
 temp
+cover.out
