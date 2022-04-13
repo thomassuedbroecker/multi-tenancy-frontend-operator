@@ -1,6 +1,7 @@
 # Example Tenancy Frontend Operator
 
 Related to following blog posts:
+
 ### LOCAL DEVELOPMENT
 
 Get the operator running on a local machine and using Kubernetes.
