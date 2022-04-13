@@ -96,6 +96,12 @@ echo "************************************"
 connectToIBMCluster
 
 echo "************************************"
+echo " installOLMandPrometheusOperator"
+echo "************************************"
+
+installOLMandPrometheus
+
+echo "************************************"
 echo " setupExampleApplication"
 echo "************************************"
 
