@@ -25,3 +25,9 @@ testbin/*
 *.swp
 *.swo
 *~
+
+# custome
+/temp
+connect*
+copy-pro*
+
