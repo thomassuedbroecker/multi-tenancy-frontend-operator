@@ -20,3 +20,7 @@ I verified my example project (Multi Tenancy Frontend Operator) also for these t
 * [Deploy an operator without the Operator SDK](https://suedbroecker.net/2022/03/22/deploy-an-operator-without-the-operator-sdk/)
 * [Add a new API version to an existing operator](https://suedbroecker.net/2022/03/24/add-a-new-api-version-to-an-existing-operator/)
 * [Add a conversion webhook to an operator to convert API versions](https://suedbroecker.net/2022/03/29/add-a-conversion-webhook-to-an-operator-to-convert-api-versions/)
+
+### MONITORING
+
+* [Monitor your custom operator with Prometheus](https://wp.me/paelj4-1iv)
