@@ -29,7 +29,7 @@ spec:
     type: LoadBalancer  # Set Service type, either NodePort, ClusterIP or LoadBalancer
     ports: # Additional ports to add to the service
       - name: grafana-proxy
-        port: 9091
+        port: 3000
         protocol: TCP
   dashboardLabelSelector:
     - matchExpressions:
