@@ -1,6 +1,7 @@
 # Example Tenancy Frontend Operator
 
 Related to following blog posts:
+
 ### LOCAL DEVELOPMENT
 
 Get the operator running on a local machine and using Kubernetes.
@@ -24,3 +25,5 @@ I verified my example project (Multi Tenancy Frontend Operator) also for these t
 ### MONITORING
 
 * [Monitor your custom operator with Prometheus](https://wp.me/paelj4-1iv)
+* [Example for an installation and an initial configuration of the Grafana operator](https://wp.me/paelj4-1ld)
+* [Access Prometheus queries using the Prometheus HTTP API](https://wp.me/paelj4-1kb)
