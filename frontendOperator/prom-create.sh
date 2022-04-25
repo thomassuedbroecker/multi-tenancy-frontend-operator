@@ -20,14 +20,7 @@ kubectl create -f prom-loadbalancer.yaml -n monitoring
 echo "Press any key to move on"
 read input
 
-make generate
-make manifests
-
-
 # Example Operator
-
-
-
 EXTERNAL_IP=$(kubectl get service prometheus -n monitoring | grep prometheus |  awk '{print $4;}')
 PORT=$(kubectl get service prometheus -n monitoring | grep prometheus |  awk '{print $5;}'| sed 's/\(.*\):.*/\1/g')
 echo "http://$EXTERNAL_IP:$PORT"
