@@ -69,6 +69,8 @@ installOLM
 
 installPrometheusOperator
 
+configurePrometheusOperator
+
 getPrometheusUIURL
 
 # Uncomment the next line to use your own build
