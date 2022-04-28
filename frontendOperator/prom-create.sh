@@ -33,6 +33,8 @@ function configurePrometheusOperator () {
     kubectl create -f prom-clusterrolebinding.yaml -n monitoring
     kubectl create -f prom-instance.yaml -n monitoring
     kubectl create -f prom-loadbalancer.yaml -n monitoring
+
+    kubectl get pods -n monitoring
     echo "Press any key to move on"
     read input
 }
