@@ -14,6 +14,7 @@ export CONTROLLER_IMAGE='frontendcontroller-monitoring:v0.0.1'
 
 function installOLM () {
     operator-sdk olm install latest
+    kubectl get catalogsource -n olm
     echo "Press any key to move on"
     read input
 }
@@ -35,6 +36,7 @@ function configurePrometheusOperator () {
     kubectl create -f prom-loadbalancer.yaml -n monitoring
 
     kubectl get pods -n monitoring
+    kubectl get packagemanifests -n olm | grep 'prom'
     echo "Press any key to move on"
     read input
 }
