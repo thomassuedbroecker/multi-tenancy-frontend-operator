@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus
+  name: prometheus-instance
   annotations:
     service.kubernetes.io/ibm-load-balancer-cloud-provider-ip-type: "public"      
 spec:
@@ -12,4 +12,4 @@ spec:
     protocol: TCP
     targetPort: 9090
   selector:
-    prometheus: prometheus
+    prometheus: prometheus-instance

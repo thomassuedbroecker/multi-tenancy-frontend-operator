@@ -51,8 +51,8 @@ function configurePrometheusOperator () {
 
 # Example Operator
 function getPrometheusUIURL () {
-    EXTERNAL_IP=$(kubectl get service prometheus -n monitoring | grep prometheus |  awk '{print $4;}')
-    PORT=$(kubectl get service prometheus -n monitoring | grep prometheus |  awk '{print $5;}'| sed 's/\(.*\):.*/\1/g')
+    EXTERNAL_IP=$(kubectl get service prometheus-instance -n monitoring | grep prometheus-instance |  awk '{print $4;}')
+    PORT=$(kubectl get service prometheus-instance -n monitoring | grep prometheus |  awk '{print $5;}'| sed 's/\(.*\):.*/\1/g')
     echo "Access Prometheus UI: http://$EXTERNAL_IP:$PORT"
 }
 
@@ -69,8 +69,10 @@ function buildAndUploadCustomOperator () {
 
 # Deploy
 function deployCustomOperator () {
+
     make deploy IMG="$REGISTRY/$ORG/$CONTROLLER_IMAGE"
     kubectl apply -f config/samples/multitenancy_v1alpha1_tenancyfrontend.yaml -n default
+    kubectl get pods -n fontendoperator-system
 
 }
 
@@ -84,11 +86,11 @@ installPrometheusOperator
 
 configurePrometheusOperator
 
-getPrometheusUIURL
-
 # Uncomment the next line to use your own build
 # ===============================
 # buildAndUploadCustomOperator
 
 deployCustomOperator
+
+getPrometheusUIURL
 
