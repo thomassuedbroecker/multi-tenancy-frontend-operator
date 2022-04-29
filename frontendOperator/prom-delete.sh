@@ -18,9 +18,9 @@ function deleteFrontendOperator () {
 
 function deletePrometheusInstanceAndConfiguration () {
     # Prometheus Configuration
-    #kubectl delete -f prom-serviceaccount.yaml -n monitoring
-    #kubectl delete -f prom-clusterrole.yaml -n monitoring
-    #kubectl delete -f prom-clusterrolebinding.yaml -n monitoring
+    kubectl delete -f prom-serviceaccount.yaml -n monitoring
+    kubectl delete -f prom-clusterrole.yaml -n monitoring
+    kubectl delete -f prom-clusterrolebinding.yaml -n monitoring
     kubectl delete -f prom-instance.yaml -n monitoring
     kubectl delete -f prom-loadbalancer.yaml -n monitoring
     kubectl delete namespace monitoring

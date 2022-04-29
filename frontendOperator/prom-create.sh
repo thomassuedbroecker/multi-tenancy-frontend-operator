@@ -14,6 +14,8 @@ export CONTROLLER_IMAGE='frontendcontroller-monitoring:v0.0.1'
 
 function installOLM () {
     operator-sdk olm install latest
+    kubectl get pods -n olm
+    kubectl get pods -n operators
     kubectl get catalogsource -n olm
     echo "Press any key to move on"
     read input
@@ -26,6 +28,7 @@ function installPrometheusOperator () {
     # curl https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml > prometheus-bundle.yaml
     kubectl create namespace monitoring
     kubectl create -f ./prom-bundle-monitoring.yaml
+    kubectl get pods -n monitoring
     
     echo "Press any key to move on"
     read input
@@ -36,7 +39,12 @@ function configurePrometheusOperator () {
 
     kubectl create -f prom-instance.yaml -n monitoring
     kubectl create -f prom-loadbalancer.yaml -n monitoring
+    kubectl create -f prom-serviceaccount.yaml -n monitoring
+    kubectl create -f prom-clusterrole.yaml -n monitoring
+    kubectl create -f prom-clusterrolebinding.yaml -n monitoring
+
     kubectl get pods -n monitoring
+    
     echo "Press any key to move on"
     read input
 }
@@ -63,6 +71,7 @@ function buildAndUploadCustomOperator () {
 function deployCustomOperator () {
     make deploy IMG="$REGISTRY/$ORG/$CONTROLLER_IMAGE"
     kubectl apply -f config/samples/multitenancy_v1alpha1_tenancyfrontend.yaml -n default
+
 }
 
 # **********************************************************************************
