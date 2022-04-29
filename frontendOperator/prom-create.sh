@@ -21,22 +21,22 @@ function installOLM () {
 
 # Prometheus Operator
 function installPrometheusOperator () {
-    kubectl create -f https://operatorhub.io/install/prometheus.yaml
+    
+    # kubectl create -f https://operatorhub.io/install/prometheus.yaml
+    # curl https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/main/bundle.yaml > prometheus-bundle.yaml
+    kubectl create namespace monitoring
+    kubectl create -f ./prom-bundle-monitoring.yaml
+    
     echo "Press any key to move on"
     read input
 }
 
 # Prometheus Configuration
 function configurePrometheusOperator () {
-    kubectl create namespace monitoring
-    kubectl create -f prom-serviceaccount.yaml -n monitoring
-    kubectl create -f prom-clusterrole.yaml -n monitoring
-    kubectl create -f prom-clusterrolebinding.yaml -n monitoring
+
     kubectl create -f prom-instance.yaml -n monitoring
     kubectl create -f prom-loadbalancer.yaml -n monitoring
-
     kubectl get pods -n monitoring
-    kubectl get packagemanifests -n olm | grep 'prom'
     echo "Press any key to move on"
     read input
 }
