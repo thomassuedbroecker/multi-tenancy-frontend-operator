@@ -80,17 +80,35 @@ function deployCustomOperator () {
 # Execution
 # **********************************************************************************
 
+echo "************************************"
+echo " Install OLM"
+echo "************************************"
 installOLM
 
+echo "************************************"
+echo " Install Prometheus Operator"
+echo "************************************"
 installPrometheusOperator
 
+echo "************************************"
+echo " Configure Prometheus Operator"
+echo "************************************"
 configurePrometheusOperator
 
+echo "************************************"
+echo " Build and upload custom operator container image"
+echo "************************************"
 # Uncomment the next line to use your own build
 # ===============================
 # buildAndUploadCustomOperator
 
+echo "************************************"
+echo " Deploy custom operator"
+echo "************************************"
 deployCustomOperator
 
+echo "************************************"
+echo " Get prometheus UI URL"
+echo "************************************"
 getPrometheusUIURL
 

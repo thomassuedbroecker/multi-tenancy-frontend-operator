@@ -62,8 +62,27 @@ function deleteOLM () {
 # Execution
 # **********************************************************************************
 
+echo "************************************"
+echo " Delete frontend operator"
+echo "************************************"
 deleteFrontendOperator
+
+echo "************************************"
+echo " Delete prometheus instance"
+echo "************************************"
 deletePrometheusInstanceAndConfiguration
+
+echo "************************************"
+echo " Delete prometheus operator"
+echo "************************************"
 deletePrometheusOperator
+
+echo "************************************"
+echo " Delete remaining prometheus crds"
+echo "************************************"
 deleteCRDsPrometheusOperator
+
+echo "************************************"
+echo " Delete olm"
+echo "************************************"
 deleteOLM
