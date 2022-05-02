@@ -1,6 +1,6 @@
 # Example "Multi Tenancy Frontend Operator"
 
-The operator simply deploys an frontend application which runs on a nginx server. Therefor the operator creates following Kubernetes resources:
+The operator simply deploys a frontend application which runs on a nginx server. Therefor the operator creates following Kubernetes resources:
 
 - A deployment
 - A service
@@ -8,7 +8,7 @@ The operator simply deploys an frontend application which runs on a nginx server
 
 The source code of the example frontend application is available in the open sourced GitHub project [multi-tenancy-frontend](https://github.com/IBM/multi-tenancy-frontend).
 
-## The project is related to following blog posts
+## The project is related to following blog posts:
 
 ### LOCAL DEVELOPMENT
 
